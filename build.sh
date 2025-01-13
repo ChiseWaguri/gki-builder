@@ -153,8 +153,8 @@ cd $WORKDIR
 
 text=$(
     cat <<EOF
-*~~~ GKI Build Started ~~~*
-*GKI Version*: \`$GKI_VERSION\`
+*~~~ Kernel Build Started ~~~*
+*Device*: \`gold\`
 *Kernel Version*: \`$KERNEL_VERSION\`
 *Build Status*: \`$STATUS\`
 *Date*: \`$KBUILD_BUILD_TIMESTAMP\`
@@ -181,11 +181,11 @@ set -e
 cd $WORKDIR
 
 if ! [[ -f $KERNEL_IMAGE ]]; then
-    send_msg "❌ GKI Build failed!"
+    send_msg "❌ Build failed!"
     upload_file "$WORKDIR/build.log"
     exit 1
 else
-    send_msg "✅ GKI Build succeeded"
+    send_msg "✅ Build succeeded"
 
     # Clone AnyKernel
     git clone --depth=1 "$ANYKERNEL_REPO" -b "$ANYKERNEL_BRANCH" $WORKDIR/anykernel
@@ -212,7 +212,7 @@ else
     cd $WORKDIR
 
     ## Release into GitHub
-    TAG="$BUILD_DATE"
+    TAG="gold-$BUILD_DATE"
     RELEASE_MESSAGE="${ZIP_NAME%.zip}"
     DOWNLOAD_URL="$GKI_RELEASES_REPO/releases/download/$TAG/$ZIP_NAME"
     
