@@ -9,12 +9,12 @@ export KBUILD_BUILD_TIMESTAMP=$(date)
 
 # AnyKernel variables
 export ANYKERNEL_REPO="https://github.com/Asteroidd21/Anykernel3"
-export ANYKERNEL_BRANCH="gki"
+export ANYKERNEL_BRANCH="gold"
 
 # Kernel
-export KERNEL_REPO="https://github.com/Asteroidd21/gki_android12-5.10"
+export KERNEL_REPO="https://github.com/Asteroidd21/kernel_ximi_gold"
 export KERNEL_BRANCH="master"
-export DEFCONFIG="gki_defconfig"
+export DEFCONFIG="gold_defconfig"
 export KERNEL_IMAGE="$WORKDIR/out/arch/arm64/boot/Image"
 
 # Releases repository
@@ -34,4 +34,4 @@ export MAKE_FLAGS="ARCH=arm64 LLVM=1 LLVM_IAS=1 O=$WORKDIR/out CROSS_COMPILE=aar
 
 # Zip name
 export BUILD_DATE=$(date -d "$KBUILD_BUILD_TIMESTAMP" +"%y%m%d%H%M")
-export ZIP_NAME="ambatubash69-KVER-OPTIONE-$BUILD_DATE.zip"
+export ZIP_NAME="kerneltest-gold-KVER-OPTIONE-$BUILD_DATE.zip"
