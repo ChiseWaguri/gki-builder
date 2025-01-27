@@ -24,6 +24,7 @@ mkdir -p android-kernel && cd android-kernel
 
 # Variables
 WORKDIR=$(pwd)
+export WORKDIR=$WORKDIR
 source $WORKDIR/../config.sh
 
 # Import functions
@@ -41,7 +42,11 @@ else
 fi
 
 # Clone kernel source
-git clone --depth=1 $KERNEL_REPO -b $KERNEL_BRANCH $WORKDIR/common
+git clone --depth=$KERNEL_DEPTH $KERNEL_REPO -b $KERNEL_BRANCH $WORKDIR/common
+cd $WORKDIR/common
+if [[ $KERNEL_REVERT_COMMIT == "yes" ]]; then
+    git checkout $KERNEL_COMMIT_HASH
+fi
 
 # Extract kernel version
 cd $WORKDIR/common
@@ -55,7 +60,6 @@ if [[ $USE_AOSP_CLANG == "true" ]]; then
     wget -qO $WORKDIR/clang.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-$AOSP_CLANG_VERSION.tar.gz
     tar -xf $WORKDIR/clang.tar.gz -C $WORKDIR/clang/
     rm -f $WORKDIR/clang.tar.gz
-    NO_BINUTILS=1
 elif [[ $USE_CUSTOM_CLANG == "true" ]]; then
     if [[ $CUSTOM_CLANG_SOURCE =~ git ]]; then
         if [[ $CUSTOM_CLANG_SOURCE == *'.tar.'* ]]; then
@@ -70,11 +74,6 @@ elif [[ $USE_CUSTOM_CLANG == "true" ]]; then
         echo "Clang source other than git is not supported."
         exit 1
     fi
-
-    if ! find "$WORKDIR/clang/bin" -name 'aarch64-linux-gnu-*' >/dev/null 2>&1; then
-        NO_BINUTILS=1
-    fi
-
 elif [[ $USE_AOSP_CLANG == "true" ]] && [[ $USE_CUSTOM_CLANG == "true" ]]; then
     echo "You have to choose one, AOSP Clang or Custom Clang!"
     exit 1
@@ -84,11 +83,9 @@ else
 fi
 
 # Clone binutils if they don't exist
-if [[ -n $NO_BINUTILS ]]; then
-    git clone --depth=1 https://github.com/XSans0/arm-linux-androideabi-4.9 $WORKDIR/gcc32
-    git clone --depth=1 https://github.com/XSans0/aarch64-linux-android-4.9 $WORKDIR/gcc64
-    export PATH="$WORKDIR/clang/bin:$WORKDIR/gcc64/bin:$WORKDIR/gcc32/bin:$PATH"
-    MAKE_FLAGS=$(echo "$MAKE_FLAGS" | sed "s/CROSS_COMPILE=.*/CROSS_COMPILE=aarch64-linux-android-/g; s/CROSS_COMPILE_COMPAT=.*/CROSS_COMPILE_COMPAT=arm-linux-androideabi-/g")
+if ! ls $WORKDIR/clang/bin | grep -q 'aarch64-linux-gnu'; then
+    git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gas/linux-x86 -b main $WORKDIR/gas
+    export PATH="$WORKDIR/clang/bin:$WORKDIR/gas:$PATH"
 else
     export PATH="$WORKDIR/clang/bin:$PATH"
 fi
@@ -96,15 +93,42 @@ fi
 # Extract clang version
 COMPILER_STRING=$(clang -v 2>&1 | head -n 1 | sed 's/(https..*//' | sed 's/ version//')
 
+# Melt remove ksu in staging
+sed -i '/kernelsu/d' $WORKDIR/common/drivers/staging/Kconfig
+sed -i '/kernelsu/d' $WORKDIR/common/drivers/staging/Makefile
+rm -rf $WORKDIR/common/drivers/staging/kernelsu
+
+# LTO Configuration
+
+if [[ $LTO_CONFIG == "NONE" ]]; then
+    sed -i 's/CONFIG_LTO=y/CONFIG_LTO=n/' "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    sed -i 's/CONFIG_LTO_CLANG_FULL=y/CONFIG_LTO_CLANG_FULL=n/' "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    sed -i 's/CONFIG_LTO_CLANG_THIN=y/CONFIG_LTO_CLANG_THIN=n/' "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    sed -i 's/CONFIG_THINLTO=y/CONFIG_THINLTO=n/' "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    echo "CONFIG_LTO_CLANG_NONE=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    echo "CONFIG_LTO_NONE=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    
+elif [[ $LTO_CONFIG == "default" ]]; then
+    echo "Using default LTO Config from '$DEFCONFIG'"
+    
+elif [[ $LTO_CONFIG == "THIN" ]]; then
+    sed -i 's/CONFIG_LTO=n/CONFIG_LTO=y/' "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    sed -i 's/CONFIG_LTO_CLANG_FULL=y/CONFIG_LTO_CLANG_THIN=y/' "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    sed -i 's/CONFIG_LTO_CLANG_NONE=y/CONFIG_LTO_CLANG_THIN=y/' "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    
+elif [[ $LTO_CONFIG == "FULL" ]]; then
+    sed -i 's/CONFIG_LTO=n/CONFIG_LTO=y/' "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    sed -i 's/CONFIG_LTO_CLANG_THIN=y/CONFIG_LTO_CLANG_FULL=y/' "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    sed -i 's/CONFIG_LTO_CLANG_NONE=y/CONFIG_LTO_CLANG_FULL=y/' "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+
+fi
+
+
 # KSU or KSU-Next setup
 if [[ $USE_KSU_NEXT == "yes" ]]; then
-    if [[ $USE_KSU_SUSFS == "yes" ]]; then
-        echo "KSU-Next doesn't support SuSFS by now. Please disable it."
-        exit 1
-    fi
-    curl -LSs https://raw.githubusercontent.com/rifsxd/KernelSU-Next/refs/heads/next/kernel/setup.sh | bash -
+    curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s next
     cd $WORKDIR/KernelSU-Next
-    KSU_NEXT_VERSION=$(git describe --abbrev=0 --tags)
+    KSU_VERSION=$(git describe --abbrev=0 --tags)
     cd $WORKDIR
 elif [[ $USE_KSU == "yes" ]]; then
     curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/refs/heads/main/kernel/setup.sh" | bash -
@@ -120,50 +144,134 @@ fi
 git config --global user.email "kontol@example.com"
 git config --global user.name "Your Name"
 
+# Kernel Patches
+git clone --depth=1 "https://github.com/ChiseWaguri/kernel-patches" $WORKDIR/kernel-patches
+KERNEL_PATCHES="$WORKDIR/kernel-patches"
+
+# TheWildJames Patches
+git clone https://github.com/TheWildJames/kernel_patches $WORKDIR/wild-patches
+WILD_PATCHES="$WORKDIR/wild-patches"
+
+
 # SUSFS4KSU setup
-if [[ $USE_KSU == "yes" ]] && [[ $USE_KSU_SUSFS == "yes" ]]; then
+if [[ $USE_KSU_SUSFS == "yes" ]]; then
     git clone --depth=1 "https://gitlab.com/simonpunk/susfs4ksu" -b "gki-$GKI_VERSION" $WORKDIR/susfs4ksu
     SUSFS_PATCHES="$WORKDIR/susfs4ksu/kernel_patches"
-
-    cd $WORKDIR/common
-    ZIP_NAME=$(echo "$ZIP_NAME" | sed 's/KSU/KSUxSUSFS/g')
-
-    # Copy header files
-    cp $SUSFS_PATCHES/include/linux/* ./include/linux/
-    cp $SUSFS_PATCHES/fs/* ./fs/
-
-    # Apply patch to KernelSU
-    cd $WORKDIR/KernelSU
-    cp $SUSFS_PATCHES/KernelSU/10_enable_susfs_for_ksu.patch .
-    patch -p1 <10_enable_susfs_for_ksu.patch || exit 1
-
-    # Apply patch to kernel
-    cd $WORKDIR/common
-    cp $SUSFS_PATCHES/50_add_susfs_in_gki-$GKI_VERSION.patch .
-    patch -p1 <50_add_susfs_in_gki-$GKI_VERSION.patch || exit 1
-
-    SUSFS_VERSION=$(grep -E '^#define SUSFS_VERSION' ./include/linux/susfs.h | cut -d' ' -f3 | sed 's/"//g')
-
-elif [[ $USE_KSU_SUSFS == "yes" ]] && [[ $USE_KSU != "yes" ]]; then
-    echo "[ERROR] You can't use SUSFS without KSU enabled!"
-    exit 1
+    
+    if [[ $USE_KSU_NEXT != "yes" ]] && [[ $USE_KSU != "yes" ]]; then
+        echo "[ERROR] You can't use SUSFS without KSU enabled!"
+        exit 1
+       
+    #KSU+SUSFS setup
+    elif [[ $USE_KSU == "yes" ]]; then
+        cd $WORKDIR/common
+        ZIP_NAME=$(echo "$ZIP_NAME" | sed 's/KSU/KSUxSUSFS/g')
+    
+        # Copy header files
+        cp $SUSFS_PATCHES/include/linux/* ./include/linux/
+        cp $SUSFS_PATCHES/fs/* ./fs/
+    
+        # Apply patch to KernelSU
+        cd $WORKDIR/KernelSU
+        cp $SUSFS_PATCHES/KernelSU/10_enable_susfs_for_ksu.patch .
+        patch -p1 <10_enable_susfs_for_ksu.patch || exit 1
+    
+        # Apply patch to kernel
+        cd $WORKDIR/common
+        cp $SUSFS_PATCHES/50_add_susfs_in_gki-$GKI_VERSION.patch .
+        patch -p1 <50_add_susfs_in_gki-$GKI_VERSION.patch || exit 1
+    
+        SUSFS_VERSION=$(grep -E '^#define SUSFS_VERSION' ./include/linux/susfs.h | cut -d' ' -f3 | sed 's/"//g')
+    
+        #KSU Next+SUSFS setup
+    elif [[ $USE_KSU_NEXT == "yes" ]]; then
+        if [[ $SUSFS_REVERT_COMMIT == "yes" ]]; then
+            cd $WORKDIR/susfs4ksu
+            git checkout $SUSFS_COMMIT_HASH
+        fi
+    
+        cd $WORKDIR/common
+        ZIP_NAME=$(echo "$ZIP_NAME" | sed 's/KSU_NEXT/KSU_NEXTxSUSFS/g')
+    
+        # Copy header files
+        cp $SUSFS_PATCHES/include/linux/* ./include/linux/
+        cp $SUSFS_PATCHES/fs/* ./fs/
+    
+        # Apply patch to kernel
+        cd $WORKDIR/common
+        cp $SUSFS_PATCHES/50_add_susfs_in_gki-$GKI_VERSION.patch .
+        echo "Patching GKI SUSFS"
+        patch -p1 <50_add_susfs_in_gki-$GKI_VERSION.patch || exit 1
+        
+        # Apply patch to KernelSU-Next
+        cd $WORKDIR/KernelSU-Next
+        echo "Patching KSU-Next"
+        cp $SUSFS_PATCHES/KernelSU/10_enable_susfs_for_ksu.patch .
+        patch -p1 --forward < 10_enable_susfs_for_ksu.patch || true
+        
+        # Apply Specific KSU Next SUSFS Patch
+        cd $WORKDIR
+        cp $WILD_PATCHES/apk_sign.c_fix.patch ./
+        patch -p1 -F 3 < apk_sign.c_fix.patch
+        cp $WILD_PATCHES/core_hook.c_fix.patch ./
+        echo "Patching SUSFS Next"
+        patch -p1 --fuzz=3 < core_hook.c_fix.patch
+        cp $WILD_PATCHES/selinux.c_fix.patch ./
+        patch -p1 -F 3 < selinux.c_fix.patch
+    
+        SUSFS_VERSION=$(grep -E '^#define SUSFS_VERSION' $WORKDIR/common/include/linux/susfs.h | cut -d' ' -f3 | sed 's/"//g')
+    fi
 fi
+
+# Apply patch
+cd $WORKDIR/common
+# Apply additional hiding patch
+echo "Patching Hiding Stuff"
+cp $WILD_PATCHES/69_hide_stuff.patch ./
+patch -p1 -F 3 < 69_hide_stuff.patch || true
+
+# Add SUSFS configuration settings
+echo "CONFIG_KSU=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+echo "CONFIG_KSU_SUSFS=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+
+# Add additional tmpfs config setting
+echo "CONFIG_TMPFS_XATTR=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+
+# Run sed commands for modifications
+sed -i 's/check_defconfig//' "$WORKDIR/common/build.config.gki"
+sed -i 's/-dirty//' "$WORKDIR/common/scripts/setlocalversion"
+sed -i 's/echo "+"/# echo "+"/g' "$WORKDIR/common/scripts/setlocalversion"
+sed -i '$s|echo "\$res"|echo "\$res-Chise+"|' "$WORKDIR/common/scripts/setlocalversion"
+
 
 cd $WORKDIR
 
 text=$(
     cat <<EOF
-*~~~ QuartiX CI ~~~*
+*~~~ Compiling $KERNEL_NAME ~~~*
 *GKI Version*: \`$GKI_VERSION\`
 *Kernel Version*: \`$KERNEL_VERSION\`
 *Build Status*: \`$STATUS\`
 *Date*: \`$KBUILD_BUILD_TIMESTAMP\`
-*KSU*: \`$([[ $USE_KSU == "yes" ]] && echo "true" || echo "false")\`$([[ $USE_KSU == "yes" ]] && echo "
+*KernelSU*: \`$([[ $USE_KSU == "yes" ]] && echo "OG KernelSU")$([[ $USE_KSU_NEXT == "yes" ]] && echo "KernelSU-Next" || echo "-")\`$([[ $USE_KSU == "yes" ]] || [[ $USE_KSU_NEXT == "yes" ]] && echo "
 *KSU Version*: \`$KSU_VERSION\`")
-*KSU-Next*: \`$([[ $USE_KSU_NEXT == "yes" ]] && echo "true" || echo "false")\`$([[ $USE_KSU_NEXT == "yes" ]] && echo "
-*KSU-Next Version*: \`$KSU_NEXT_VERSION\`")
-*SUSFS*: \`$([[ $USE_KSU_SUSFS == "yes" ]] && echo "true" || echo "false")\`$([[ $USE_KSU_SUSFS == "yes" ]] && echo "
-*SUSFS Version*: \`$SUSFS_VERSION\`")
+$([[ $USE_KSU == "yes" ]] || [[ $USE_KSU_NEXT == "yes" ]] && echo "*SUSFS*: \`$([[ $USE_KSU_SUSFS == "yes" ]] && echo "true" || echo "false")\`$([[ $USE_KSU_SUSFS == "yes" ]] && echo "
+*SUSFS Version*: \`$SUSFS_VERSION\`")")
 *Compiler*: \`$COMPILER_STRING\`
 EOF
 )
@@ -174,7 +282,9 @@ send_msg "$text"
 cd $WORKDIR/common
 set +e
 (
+    make $MAKE_FLAGS mrproper
     make $MAKE_FLAGS $DEFCONFIG
+    upload_file "$WORKDIR/common/.config" "config used"
     make $MAKE_FLAGS -j$(nproc --all)
 ) 2>&1 | tee $WORKDIR/build.log
 set -e
@@ -190,6 +300,7 @@ else
 
     # Zipping
     cd $WORKDIR/anykernel
+    sed -i "s/NAMEDUMMY/$KERNEL_NAME/g" anykernel.sh
     sed -i "s/DUMMY1/$KERNEL_VERSION/g" anykernel.sh
     sed -i "s/DATE/$BUILD_DATE/g" anykernel.sh
 
@@ -205,43 +316,17 @@ else
         sed -i "s/DUMMY2//g" anykernel.sh
     fi
 
-    cp $KERNEL_IMAGE .
-    zip -r9 $ZIP_NAME * -x LICENSE
-    mv $ZIP_NAME $WORKDIR
-    cd $WORKDIR
+    cp "$KERNEL_IMAGE" .
+    zip -r9 "$WORKDIR/$ZIP_NAME" *
+    cd "$WORKDIR"
 
     ## Release into GitHub
-    TAG="$BUILD_DATE"
-    RELEASE_MESSAGE="${ZIP_NAME%.zip}"
-    DOWNLOAD_URL="$GKI_RELEASES_REPO/releases/download/$TAG/$ZIP_NAME"
-
-    GITHUB_USERNAME=$(echo "$GKI_RELEASES_REPO" | awk -F'https://github.com/' '{print $2}' | awk -F'/' '{print $1}')
-    REPO_NAME=$(echo "$GKI_RELEASES_REPO" | awk -F'https://github.com/' '{print $2}' | awk -F'/' '{print $2}')
-
-    # Create a release tag
-    $WORKDIR/../github-release release \
-        --security-token "$gh_token" \
-        --user "$GITHUB_USERNAME" \
-        --repo "$REPO_NAME" \
-        --tag "$TAG" \
-        --name "$RELEASE_MESSAGE"
-
-    sleep 5
-
-    # Upload the kernel zip
-    $WORKDIR/../github-release upload \
-        --security-token "$gh_token" \
-        --user "$GITHUB_USERNAME" \
-        --repo "$REPO_NAME" \
-        --tag "$TAG" \
-        --name "$ZIP_NAME" \
-        --file "$WORKDIR/$ZIP_NAME" || failed=yes
-
-    if [[ $failed == "yes" ]]; then
-        send_msg "❌ Failed to release into GitHub"
-        exit 1
-    else
-        send_msg "📦 [Download]($DOWNLOAD_URL)"
+    if [[ $RELEASE_INTO_GH == "yes" ]]; then
+        release_gh
     fi
+    
+    upload_file "$WORKDIR/$ZIP_NAME" "$ZIP_NAME"
+    upload_file "$KERNEL_IMAGE" "Image"
+    
     exit 0
 fi

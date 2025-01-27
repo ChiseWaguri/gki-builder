@@ -30,26 +30,32 @@ on:
      required: false
      default: false
      type: boolean
+     
+    RELEASEGH:
+     description: 'Release to GitHub'
+     required: false
+     default: false
+     type: boolean
 
 jobs:
   build:
     name: Build GKI Kernel
     runs-on: ubuntu-latest
 
-    steps:
+    steps:    
     - name: Checkout
       uses: actions/checkout@v4
+
+    - name: Set Swap Space
+      uses: pierotofy/set-swap-space@master
+      with:
+       swap-size-gb: 10
 
     - name: Install dependencies
       run: |
        sudo apt update -y
        sudo apt install bc cpio flex bison aptitude git python-is-python3 tar perl wget curl lz4 zstd libarchive-tools -y
        sudo aptitude install libssl-dev -y
-
-    - name: Set Swap Space
-      uses: pierotofy/set-swap-space@master
-      with:
-        swap-size-gb: 10
 
     - name: Build
       run: |
@@ -65,6 +71,10 @@ jobs:
 
        if [[ "${{ inputs.KSUNEXT }}" == "true" ]]; then
             export USE_KSU_NEXT="yes"
+       fi
+       
+       if [[ "${{ inputs.RELEASEGH }}" == "true" ]]; then
+            export RELEASE_INTO_GH="yes"
        fi
 
        export STATUS="${{ inputs.STATUS }}"
