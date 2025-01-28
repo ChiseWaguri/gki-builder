@@ -129,11 +129,13 @@ if [[ $USE_KSU_NEXT == "yes" ]]; then
     curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s next
     cd $WORKDIR/KernelSU-Next
     KSU_VERSION=$(git describe --abbrev=0 --tags)
+    echo "CONFIG_KSU=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
     cd $WORKDIR
 elif [[ $USE_KSU == "yes" ]]; then
     curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/refs/heads/main/kernel/setup.sh" | bash -
     cd $WORKDIR/KernelSU
     KSU_VERSION=$(git describe --abbrev=0 --tags)
+    echo "CONFIG_KSU=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
     cd $WORKDIR
 elif [[ $USE_KSU_NEXT == "yes" ]] && [[ $USE_KSU == "yes" ]]; then
     echo
@@ -157,6 +159,23 @@ WILD_PATCHES="$WORKDIR/wild-patches"
 if [[ $USE_KSU_SUSFS == "yes" ]]; then
     git clone --depth=1 "https://gitlab.com/simonpunk/susfs4ksu" -b "gki-$GKI_VERSION" $WORKDIR/susfs4ksu
     SUSFS_PATCHES="$WORKDIR/susfs4ksu/kernel_patches"
+    # Add SUSFS configuration settings
+    echo "CONFIG_KSU_SUSFS=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
     
     if [[ $USE_KSU_NEXT != "yes" ]] && [[ $USE_KSU != "yes" ]]; then
         echo "[ERROR] You can't use SUSFS without KSU enabled!"
@@ -182,6 +201,7 @@ if [[ $USE_KSU_SUSFS == "yes" ]]; then
         patch -p1 <50_add_susfs_in_gki-$GKI_VERSION.patch || exit 1
     
         SUSFS_VERSION=$(grep -E '^#define SUSFS_VERSION' ./include/linux/susfs.h | cut -d' ' -f3 | sed 's/"//g')
+
     
         #KSU Next+SUSFS setup
     elif [[ $USE_KSU_NEXT == "yes" ]]; then
@@ -230,25 +250,6 @@ echo "Patching Hiding Stuff"
 cp $WILD_PATCHES/69_hide_stuff.patch ./
 patch -p1 -F 3 < 69_hide_stuff.patch || true
 
-# Add SUSFS configuration settings
-echo "CONFIG_KSU=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
-echo "CONFIG_KSU_SUSFS=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
-echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
-echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
-echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
-echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
-echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
-echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
-echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
-echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
-echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
-echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
-echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
-echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
-echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
-echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
-echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
-
 # Add additional tmpfs config setting
 echo "CONFIG_TMPFS_XATTR=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
 
@@ -257,7 +258,6 @@ sed -i 's/check_defconfig//' "$WORKDIR/common/build.config.gki"
 sed -i 's/-dirty//' "$WORKDIR/common/scripts/setlocalversion"
 sed -i 's/echo "+"/# echo "+"/g' "$WORKDIR/common/scripts/setlocalversion"
 sed -i '$s|echo "\$res"|echo "\$res-Chise+"|' "$WORKDIR/common/scripts/setlocalversion"
-
 
 cd $WORKDIR
 
