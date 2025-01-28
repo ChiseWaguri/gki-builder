@@ -203,12 +203,12 @@ if [[ $USE_KSU_SUSFS == "yes" ]]; then
         # Apply patch to KernelSU
         cd $WORKDIR/KernelSU
         cp $SUSFS_PATCHES/KernelSU/10_enable_susfs_for_ksu.patch .
-        patch -p1 <10_enable_susfs_for_ksu.patch || exit 1
+        patch -p1 < 10_enable_susfs_for_ksu.patch || true
     
         # Apply patch to kernel
         cd $WORKDIR/common
         cp $SUSFS_PATCHES/50_add_susfs_in_gki-$GKI_VERSION.patch .
-        patch -p1 <50_add_susfs_in_gki-$GKI_VERSION.patch || exit 1
+        patch -p1 < 50_add_susfs_in_gki-$GKI_VERSION.patch || true
     
         SUSFS_VERSION=$(grep -E '^#define SUSFS_VERSION' ./include/linux/susfs.h | cut -d' ' -f3 | sed 's/"//g')
 
@@ -231,7 +231,7 @@ if [[ $USE_KSU_SUSFS == "yes" ]]; then
         cd $WORKDIR/common
         cp $SUSFS_PATCHES/50_add_susfs_in_gki-$GKI_VERSION.patch .
         echo "Patching GKI SUSFS"
-        patch -p1 < 50_add_susfs_in_gki-$GKI_VERSION.patch || exit 1
+        patch -p1 < 50_add_susfs_in_gki-$GKI_VERSION.patch || true
         
         # Apply patch to KernelSU-Next
         cd $WORKDIR/KernelSU-Next
