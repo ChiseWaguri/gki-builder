@@ -21,12 +21,12 @@ export KERNEL_IMAGE="$WORKDIR/out/arch/arm64/boot/Image"
 export KERNEL_REVERT_COMMIT=no # yes or no
 export KERNEL_COMMIT_HASH=6cd5ee6f67f9374dca475929923d1e8c558832c8
 
-
+# KSU Manual Hook
+export KSU_USE_MANUAL_HOOK=yes
 
 # SUSFS4KSU for KSU-Next
 export SUSFS_REVERT_COMMIT=false
 export SUSFS_COMMIT_HASH=1833d53211478a9e44f89eb50785018051e0bd8a
-
 
 # LTO
 export LTO_CONFIG="default" 
