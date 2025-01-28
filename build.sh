@@ -178,7 +178,13 @@ if [[ $USE_KSU_SUSFS == "yes" ]]; then
     echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
     echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
     echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
-    echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    if [[ $KSU_USE_MANUAL_HOOK == "yes" ]]; then
+        echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    else
+        echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    fi
+
+    
     
     if [[ $USE_KSU_NEXT != "yes" ]] && [[ $USE_KSU != "yes" ]]; then
         echo "[ERROR] You can't use SUSFS without KSU enabled!"
@@ -224,23 +230,13 @@ if [[ $USE_KSU_SUSFS == "yes" ]]; then
         cd $WORKDIR/common
         cp $SUSFS_PATCHES/50_add_susfs_in_gki-$GKI_VERSION.patch .
         echo "Patching GKI SUSFS"
-        patch -p1 <50_add_susfs_in_gki-$GKI_VERSION.patch || exit 1
+        patch -p1 < 50_add_susfs_in_gki-$GKI_VERSION.patch || exit 1
         
         # Apply patch to KernelSU-Next
         cd $WORKDIR/KernelSU-Next
         echo "Patching KSU-Next"
-        cp $SUSFS_PATCHES/KernelSU/10_enable_susfs_for_ksu.patch .
-        patch -p1 --forward < 10_enable_susfs_for_ksu.patch || true
-        
-        # Apply Specific KSU Next SUSFS Patch
-        cd $WORKDIR
-        cp $WILD_PATCHES/apk_sign.c_fix.patch ./
-        patch -p1 -F 3 < apk_sign.c_fix.patch
-        cp $WILD_PATCHES/core_hook.c_fix.patch ./
-        echo "Patching SUSFS Next"
-        patch -p1 --fuzz=3 < core_hook.c_fix.patch
-        cp $WILD_PATCHES/selinux.c_fix.patch ./
-        patch -p1 -F 3 < selinux.c_fix.patch
+        cp $KERNEL_PATCHES/Implement-SUSFS-v1.5.4-for-KernelSU-Next.patch .
+        patch -p1 --forward < Implement-SUSFS-v1.5.4-for-KernelSU-Next.patch || true
     
         SUSFS_VERSION=$(grep -E '^#define SUSFS_VERSION' $WORKDIR/common/include/linux/susfs.h | cut -d' ' -f3 | sed 's/"//g')
     fi
