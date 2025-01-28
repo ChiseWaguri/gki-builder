@@ -57,7 +57,7 @@ cd $WORKDIR
 # Download Toolchains
 mkdir $WORKDIR/clang
 if [[ $USE_AOSP_CLANG == "true" ]]; then
-    wget -qO $WORKDIR/clang.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-$AOSP_CLANG_VERSION.tar.gz
+    wget -O $WORKDIR/clang.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-$AOSP_CLANG_VERSION.tar.gz
     tar -xf $WORKDIR/clang.tar.gz -C $WORKDIR/clang/
     rm -f $WORKDIR/clang.tar.gz
 elif [[ $USE_CUSTOM_CLANG == "true" ]]; then
