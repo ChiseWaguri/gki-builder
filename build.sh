@@ -142,6 +142,9 @@ elif [[ $USE_KSU_NEXT == "yes" ]] && [[ $USE_KSU == "yes" ]]; then
     echo "Bruh"
     exit 1
 fi
+if [[ $KSU_USE_MANUAL_HOOK == "yes" ]]; then
+        echo "CONFIG_KSU_MANUAL_HOOK=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+fi
 
 git config --global user.email "kontol@example.com"
 git config --global user.name "Your Name"
