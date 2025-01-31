@@ -13,7 +13,7 @@ export ANYKERNEL_BRANCH="gki"
 
 # Kernel
 export KERNEL_REPO="https://github.com/pzqqt/android_kernel_xiaomi_marble"
-export KERNEL_BRANCH="melt-rebase"
+export KERNEL_BRANCH="Melt-marble-v3.5"
 export KERNEL_DEPTH=1 # depth needed to revert to the commit hash, set it to 1 if you're not reverting kernel repo commit
 export DEFCONFIG="marble_defconfig"
 export KERNEL_IMAGE="$WORKDIR/out/arch/arm64/boot/Image"
