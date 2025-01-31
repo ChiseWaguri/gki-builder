@@ -166,7 +166,7 @@ if [[ $USE_KSU_SUSFS == "yes" ]]; then
     echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
     echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
     echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
-    echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+    echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=n" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
     echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
     echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
     echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
