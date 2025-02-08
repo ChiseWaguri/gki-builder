@@ -3,27 +3,27 @@ name: Build GKI
 on:
   workflow_dispatch:
    inputs:
-
-    STATUS:
-     description: 'Build Status'
+   
+    Build_Type:
+     description: 'Build Type'
      required: true
-     default: ''
+     default: 'Single Image'
      type: choice
      options:
-     - 'BETA'
-     - 'STABLE'
+     - 'Single Image'
+     - 'Multi'
 
-    KSU:
-     description: 'KSU'
-     required: false
-     default: false
-     type: boolean
+    KernelSU:
+     description: 'KernelSU'
+     required: true
+     default: 'Non-KSU'
+     type: choice
+     options:
+     - 'OG KernelSU'
+     - 'KernelSU-Next'
+     - 'MKSU'
+     - 'Non-KSU'
 
-    KSUNEXT:
-     description: 'KSU-Next (WIP)'
-     required: false
-     default: false
-     type: boolean
 
     SUSFS4KSU:
      description: 'SUSFS4KSU (KSU needed!)'
@@ -64,22 +64,29 @@ jobs:
        if [[ "${{ inputs.SUSFS4KSU }}" == "true" ]]; then
             export USE_KSU_SUSFS="yes"
        fi
+       
 
-       if [[ "${{ inputs.KSU }}" == "true" ]]; then
+       if [[ "${{ inputs.KernelSU }}" == "OG KernelSU" ]]; then
             export USE_KSU="yes"
-       fi
-
-       if [[ "${{ inputs.KSUNEXT }}" == "true" ]]; then
+       elif [[ "${{ inputs.KernelSU }}" == "KernelSU-Next" ]]; then
             export USE_KSU_NEXT="yes"
+       elif [[ "${{ inputs.KernelSU }}" == "MKSU" ]]; then
+            export USE_KSU_MKSU="yes"
        fi
        
        if [[ "${{ inputs.RELEASEGH }}" == "true" ]]; then
             export RELEASE_INTO_GH="yes"
        fi
 
-       export STATUS="${{ inputs.STATUS }}"
        export chat_id="${{ secrets.CHAT_ID }}"
        export token="${{ secrets.TOKEN }}"
        export gh_token="${{ secrets.GH_TOKEN }}"
+       export build_type="${{ inputs.Build_Type }}"
 
        ./build.sh
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+       name: kernel.zip
+       path: /home/runner/work/gki-builder/gki-builder/kernel.zip
