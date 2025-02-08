@@ -8,8 +8,8 @@ export KBUILD_BUILD_HOST="QuartiX"
 export KBUILD_BUILD_TIMESTAMP=$(date)
 
 # AnyKernel variables
-export ANYKERNEL_REPO="https://github.com/hazepynut/anykernel"
-export ANYKERNEL_BRANCH="gki"
+export ANYKERNEL_REPO="https://github.com/ChiseWaguri/anykernel"
+export ANYKERNEL_BRANCH="multi"
 
 # Kernel
 export KERNEL_REPO="https://github.com/hazepynut/gki_android12-5.10"
