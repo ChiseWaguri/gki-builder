@@ -332,6 +332,7 @@ else
 	cp $KERNEL_IMAGE $homedir/out/KSU
 fi
 
+cd $homedir/out
 if [[ $build_type == "Multi" ]]; then
 	# Install bsdiff to patch Multi
 	sudo add-apt-repository ppa:eugenesan/ppa
@@ -339,7 +340,6 @@ if [[ $build_type == "Multi" ]]; then
 	sudo apt-get install bsdiff -y
 
 	# Preparing artifact
-	cd $homedir/out
 	bsdiff NoKSU KSU ksu.p
 	mkdir ./KernelSU
 	mv ./NoKSU ./Image
@@ -349,7 +349,6 @@ else
     mv ./KSU ./Image
 fi
 
-cd $homedir/out
 zip -r9 "$homedir/kernel.zip" *
 send_msg "Success! Uploading Artifact"
 upload_file "$homedir/kernel.zip"
