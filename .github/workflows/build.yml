@@ -106,8 +106,13 @@ jobs:
        export PATH="/usr/lib/ccache:$PATH"
        ./build.sh
 
+    - name: Update version with random CI string
+      run: |
+        build_date=$(date -d "$KBUILD_BUILD_TIMESTAMP" +"%y%m%d%H%M")
+        echo "BUILD_ID=${build_date}" >> $GITHUB_ENV
+
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: kernel-zip
+        name: kernel_${{ env.BUILD_ID }}.zip
         path: "./*.zip"
