@@ -136,6 +136,7 @@ patch -p1 -F 3 < 69_hide_stuff.patch || true
 echo "CONFIG_TMPFS_XATTR=y" >> "$WORKDIR/common/arch/arm64/configs/$KERNEL_DEFCONFIG"
 
 # KernelSU Setup
+cd $WORKDIR/common
 if [[ $USE_KSU_OG == "yes" ]]; then
     curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/refs/heads/main/kernel/setup.sh" | bash -
     cd $WORKDIR/KernelSU
