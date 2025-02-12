@@ -227,8 +227,10 @@ text=$(
 *Kernel Version*: \`$KERNEL_VERSION\`
 *Build Status*: \`$STATUS\`
 *Date*: \`$KBUILD_BUILD_TIMESTAMP\`
-*KSU*: \`$([[ $USE_KSU_OG != "yes" ]] && echo "none")$([[ $USE_KSU_OG == "yes" ]] && echo "OG KernelSU")$([[ $USE_KSU_MKSU == "yes" ]] && echo "Magic KernelSU")$([[ $USE_KSU_RSU == "yes" ]] && echo "Rissu KernelSU Fork")$([[ $USE_KSU_XX == "yes" ]] && echo "xx's KernelSU Fork")\`$([[ $USE_KSU == "yes" ]] && echo "
+*KSU*: \`$([[ $USE_KSU == "yes" ]] && echo "true" || echo "false")\`$([[ $USE_KSU == "yes" ]] && echo "
 *KSU Version*: \`$KSU_VERSION\`")
+*KSU-Next*: \`$([[ $USE_KSU_NEXT == "yes" ]] && echo "true" || echo "false")\`$([[ $USE_KSU_NEXT == "yes" ]] && echo "
+*KSU-Next Version*: \`$KSU_NEXT_VERSION\`")
 *SUSFS*: \`$([[ $USE_KSU_SUSFS == "yes" ]] && echo "true" || echo "false")\`$([[ $USE_KSU_SUSFS == "yes" ]] && echo "
 *SUSFS Version*: \`$SUSFS_VERSION\`")
 *Compiler*: \`$COMPILER_STRING\`
