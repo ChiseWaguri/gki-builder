@@ -133,7 +133,7 @@ cp $wild_patches/69_hide_stuff.patch ./
 patch -p1 -F 3 < 69_hide_stuff.patch || true
 
 # Add tmpfs extended attribut config setting
-echo "CONFIG_TMPFS_XATTR=y" >> "$WORKDIR/common/arch/arm64/configs/$DEFCONFIG"
+echo "CONFIG_TMPFS_XATTR=y" >> "$WORKDIR/common/arch/arm64/configs/$KERNEL_DEFCONFIG"
 
 # KernelSU Setup
 if [[ $USE_KSU_OG == "yes" ]]; then
