@@ -61,12 +61,16 @@ send_msg() {
 # ---------------
 
 # Kernel variant
-if [[ $USE_KSU == "yes" ]]; then
-    # ksu
-    VARIANT="KSU"
+if [[ $USE_KSU_OG == "yes" ]]; then
+	VARIANT="KSU"
+elif [[ $USE_KSU_MKSU ]]; then
+	VARIANT="MKSU"
+elif [[ $USE_KSU_RKSU ]]; then
+	VARIANT="RKSU"
+elif [[ $USE_KSU_XX ]]; then
+	VARIANT="XX's-KSU"
 elif [[ $USE_KSU_NEXT == "yes" ]]; then
-    # ksu next
-    VARIANT="KSUN"
+	VARIANT="KSU-Next"
 else
     # vanilla
     VARIANT="none"
@@ -160,7 +164,7 @@ elif [[ $USE_KSU_RSU == "yes" ]]; then
     curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/refs/heads/main/kernel/setup.sh" | bash -s main
     cd $WORKDIR/KernelSU
 fi
-KSU_VERSION=$(git describe --abbrev=0 --tags)
+[[ $USE_KSU_MKSU == "yes" ]] && KSU_VERSION="MKSU" || KSU_VERSION=$(git describe --abbrev=0 --tags)
 
 cd $WORKDIR
 
@@ -178,11 +182,11 @@ elif [[ $USE_KSU == "yes" ]] && [[ $USE_KSU_SUSFS == "yes" ]]; then
 
     if [[ $USE_KSU_OG == "yes" ]]; then
         VARIANT="KSUxSuSFS"
-	elif [[ $USE_KSU_MKSU ]]
+	elif [[ $USE_KSU_MKSU ]]; then
 		VARIANT="MKSUxSuSFS"
-	elif [[ $USE_KSU_RKSU ]]
+	elif [[ $USE_KSU_RKSU ]]; then
 		VARIANT="RKSUxSuSFS"
-	elif [[ $USE_KSU_XX ]]
+	elif [[ $USE_KSU_XX ]]; then
 		VARIANT="XX's-KSUxSuSFS"
     elif [[ $USE_KSU_NEXT == "yes" ]]; then
         VARIANT="KSU-NextxSuSFS"
@@ -223,10 +227,8 @@ text=$(
 *Kernel Version*: \`$KERNEL_VERSION\`
 *Build Status*: \`$STATUS\`
 *Date*: \`$KBUILD_BUILD_TIMESTAMP\`
-*KSU*: \`$([[ $USE_KSU == "yes" ]] && echo "true" || echo "false")\`$([[ $USE_KSU == "yes" ]] && echo "
+*KSU*: \`$([[ $USE_KSU_OG == "yes" ]] && echo "OG KernelSU" || [[ $USE_KSU_OG == "yes" ]] && echo "Magic KSU") || [[ $USE_KSU_RSU == "yes" ]] && echo "RKSU" || [[ $USE_KSU_XX == "yes" ]] && echo "backslashxx's KSU fork"))\`$([[ $USE_KSU == "yes" ]] && echo "
 *KSU Version*: \`$KSU_VERSION\`")
-*KSU-Next*: \`$([[ $USE_KSU_NEXT == "yes" ]] && echo "true" || echo "false")\`$([[ $USE_KSU_NEXT == "yes" ]] && echo "
-*KSU-Next Version*: \`$KSU_VERSION\`")
 *SUSFS*: \`$([[ $USE_KSU_SUSFS == "yes" ]] && echo "true" || echo "false")\`$([[ $USE_KSU_SUSFS == "yes" ]] && echo "
 *SUSFS Version*: \`$SUSFS_VERSION\`")
 *Compiler*: \`$COMPILER_STRING\`
