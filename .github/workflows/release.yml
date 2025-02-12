@@ -1,0 +1,117 @@
+name: Build GKI - Release
+
+on:
+  workflow_dispatch:
+
+env:
+  STATUS: "STABLE"
+  CHAT_ID: ${{ secrets.CHAT_ID }}
+  TOKEN: ${{ secrets.TOKEN }}
+  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+  BUILD_KERNEL: "yes"
+
+jobs:
+  non-ksu:
+    name: Build Non-KSU variant
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          export MAN_DISABLE=true
+          sudo apt update -y
+          sudo apt install bc cpio flex bison aptitude git python-is-python3 tar perl wget curl lz4 zstd libarchive-tools ccache -y
+          sudo aptitude install libssl-dev -y
+
+      - name: Set Swap Space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 10
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@main
+        with:
+            key: kernel-release
+            append-timestamp: false
+            max-size: 4G
+
+      - name: Build
+        run: |
+          chmod a+x *.sh
+          export PATH="/usr/lib/ccache:$PATH"
+          ./build.sh
+
+  ksuxsusfs:
+    name: Build KSUxSuSFS variant
+    needs: non-ksu
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          export MAN_DISABLE=true
+          sudo apt update -y
+          sudo apt install bc cpio flex bison aptitude git python-is-python3 tar perl wget curl lz4 zstd libarchive-tools ccache -y
+          sudo aptitude install libssl-dev -y
+
+      - name: Set Swap Space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 10
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@main
+        with:
+            key: kernel-release
+            append-timestamp: false
+            max-size: 4G
+
+      - name: Build
+        run: |
+          chmod a+x *.sh
+          export USE_KSU=yes
+          export USE_KSU_SUSFS=yes
+          export PATH="/usr/lib/ccache:$PATH"
+          ./build.sh
+
+  ksunxsusfs:
+    name: Build KSUNxSuSFS variant
+    needs: ksuxsusfs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          export MAN_DISABLE=true
+          sudo apt update -y
+          sudo apt install bc cpio flex bison aptitude git python-is-python3 tar perl wget curl lz4 zstd libarchive-tools ccache -y
+          sudo aptitude install libssl-dev -y
+
+      - name: Set Swap Space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 10
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@main
+        with:
+            key: kernel-release
+            append-timestamp: false
+            max-size: 4G
+
+      - name: Build
+        run: |
+          chmod a+x *.sh
+          export USE_KSU_MKSU=yes
+          export USE_KSU_SUSFS=yes
+          export PATH="/usr/lib/ccache:$PATH"
+          ./build.sh

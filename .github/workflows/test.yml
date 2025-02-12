@@ -1,0 +1,113 @@
+name: Build GKI - TEST
+
+on:
+  workflow_dispatch:
+   inputs:
+
+    KernelSU:
+     description: "KernelSU"
+     required: false
+     default: ""
+     type: choice
+     options:
+     - "None"
+     - "OG KernelSU"
+     - "5ec1cff's MKSU"
+     - "Rsuntk's KSU Fork"
+     - "xx's KSU Fork
+     - "KernelSU-Next"
+
+    SUSFS4KSU:
+     description: "SUSFS4KSU (KSU needed!)"
+     required: false
+     default: false
+     type: boolean
+
+    Clang:
+     description: "Select Compiler"
+     required: false
+     default: ""
+     type: choice
+     options:
+     - "Default"
+     - "AOSP Clang"
+     - "Custom Clang"
+
+jobs:
+  build:
+    name: Build GKI
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+       export MAN_DISABLE=true
+       sudo apt update -y
+       sudo apt install bc cpio flex bison aptitude git python-is-python3 tar perl wget curl lz4 zstd libarchive-tools ccache -y
+       sudo aptitude install libssl-dev -y
+
+    - name: Set Swap Space
+      uses: pierotofy/set-swap-space@master
+      with:
+        swap-size-gb: 10
+
+    - name: ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: kernel-test-${{ github.ref_name }}
+        max-size: 4G
+        restore-keys: |
+          kernel-test-${{ github.ref_name }}-
+          kernel-test-
+
+    - name: Build
+      env:
+        CHAT_ID: ${{ secrets.CHAT_ID }}
+        TOKEN: ${{ secrets.TOKEN }}
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        STATUS: "BETA"
+        BUILD_KERNEL: "yes"
+      run: |
+       chmod a+x *.sh
+
+       if [[ "${{ inputs.SUSFS4KSU }}" == "true" ]]; then
+            export USE_KSU_SUSFS="yes"
+       fi
+       
+       if [[ ! -z "${{ inputs.KernelSU }}" ]]; then
+            export USE_KSU="yes"
+       fi
+
+       if [[ "${{ inputs.KernelSU }}" == "OG KernelSU" ]]; then
+            export USE_KSU_OG="yes"
+       elif [[ "${{ inputs.KernelSU }}" == "5ec1cff's MKSU" ]]; then
+            export USE_KSU_MKSU="yes"
+       elif [[ "${{ inputs.KernelSU }}" == "Rsuntk's KSU Fork" ]]; then
+            export USE_KSU_RKSU="yes"
+       elif [[ "${{ inputs.KernelSU }}" == "xx's KSU Fork" ]]; then
+            export USE_KSU_XX="yes"
+       elif [[ "${{ inputs.KernelSU }}" == "KernelSU-Next" ]]; then
+            export USE_KSU_NEXT="yes"
+       fi
+
+       if [[ "${{ inputs.Clang }}" == "AOSP Clang" ]]; then
+           sed -i 's/export USE_CUSTOM_CLANG=.*/export USE_CUSTOM_CLANG=false/g' config.sh
+           sed -i 's/export USE_AOSP_CLANG=.*/export USE_AOSP_CLANG=true/g' config.sh
+       elif [[ "${{ inputs.Clang }}" == "Custom Clang" ]]; then
+           sed -i 's/export USE_CUSTOM_CLANG=.*/export USE_CUSTOM_CLANG=true/g' config.sh
+           sed -i 's/export USE_AOSP_CLANG=.*/export USE_AOSP_CLANG=false/g' config.sh
+       elif [[ "${{ inputs.Clang }}" == "Default" ]]; then
+            : # follow config.sh
+       fi
+
+       export PATH="/usr/lib/ccache:$PATH"
+       ./build.sh
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: kernel-zip
+        path: "./*.zip"
