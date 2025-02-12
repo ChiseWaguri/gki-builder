@@ -86,7 +86,10 @@ cd $WORKDIR
 
 # Download Toolchains
 mkdir $WORKDIR/clang
-if [[ $USE_AOSP_CLANG == "true" ]]; then
+if [[ $USE_AOSP_CLANG == "true" ]] && [[ $USE_CUSTOM_CLANG == "true" ]]; then
+    echo "error: You have to choose one, AOSP Clang or Custom Clang!"
+    exit 1
+elif [[ $USE_AOSP_CLANG == "true" ]]; then
     wget -qO $WORKDIR/clang.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-$AOSP_CLANG_VERSION.tar.gz
     tar -xf $WORKDIR/clang.tar.gz -C $WORKDIR/clang/
     rm -f $WORKDIR/clang.tar.gz
@@ -104,9 +107,6 @@ elif [[ $USE_CUSTOM_CLANG == "true" ]]; then
         echo "error: Clang source other than git is not supported."
         exit 1
     fi
-elif [[ $USE_AOSP_CLANG == "true" ]] && [[ $USE_CUSTOM_CLANG == "true" ]]; then
-    echo "error: You have to choose one, AOSP Clang or Custom Clang!"
-    exit 1
 else
     echo "stfu."
     exit 1
@@ -207,7 +207,7 @@ elif [[ $USE_KSU == "yes" ]] && [[ $USE_KSU_SUSFS == "yes" ]]; then
         cp $SUSFS_PATCHES/KernelSU/10_enable_susfs_for_ksu.patch .
 		patch -p1 --forward < 10_enable_susfs_for_ksu.patch || true
         cp $wild_patches/mksu_susfs.patch ./
-        patch -p1 < mksu_susfs.patch
+        patch -p1 < mksu_susfs.patch || exit 1
     fi
 
     # Apply patch to kernel (Kernel Side)
