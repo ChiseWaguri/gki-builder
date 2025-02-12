@@ -283,6 +283,7 @@ if [[ $USE_KSU_SUSFS == "yes" ]]; then
         if  [[ USE_MKSU == "yes" ]] || [[ USE_XX_KSU == "yes" ]]; then
             cp $wild_patches/mksu_susfs.patch ./
           patch -p1 < mksu_susfs.patch
+        fi
 		
     # KSU-Next + SUSFS setup
     elif [[ $USE_KSU_NEXT == "yes" ]]; then
