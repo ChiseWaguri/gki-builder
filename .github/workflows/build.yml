@@ -5,34 +5,35 @@ on:
    inputs:
    
     Build_Type:
-     description: 'Build Type'
+     description: "Build Type"
      required: true
-     default: 'Single Image'
+     default: "Single Image"
      type: choice
      options:
-     - 'Single Image'
-     - 'Multi'
+     - "Single Image"
+     - "Multi"
 
     KernelSU:
-     description: 'KernelSU'
+     description: "KernelSU"
      required: true
-     default: 'Non-KSU'
+     default: "Non-KSU"
      type: choice
      options:
-     - 'OG KernelSU'
-     - 'KernelSU-Next'
-     - 'MKSU'
-     - 'Non-KSU'
+     - "OG KernelSU"
+     - "KernelSU-Next"
+     - "MKSU"
+     - "backslashxx's KernelSU"
+     - "Non-KSU"
 
 
     SUSFS4KSU:
-     description: 'SUSFS4KSU (KSU needed!)'
+     description: "SUSFS4KSU (KSU needed!)"
      required: false
      default: false
      type: boolean
      
     RELEASEGH:
-     description: 'Release to GitHub'
+     description: "Release to GitHub"
      required: false
      default: false
      type: boolean
@@ -71,7 +72,9 @@ jobs:
        elif [[ "${{ inputs.KernelSU }}" == "KernelSU-Next" ]]; then
             export USE_KSU_NEXT="yes"
        elif [[ "${{ inputs.KernelSU }}" == "MKSU" ]]; then
-            export USE_KSU_MKSU="yes"
+            export USE_MKSU="yes"
+       elif [[ "${{ inputs.KernelSU }}" == "backslashxx's KernelSU" ]]; then
+            export USE_XX_KSU="yes"
        fi
        
        if [[ "${{ inputs.RELEASEGH }}" == "true" ]]; then

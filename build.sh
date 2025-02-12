@@ -36,6 +36,12 @@ source $workdir/../functions.sh
 # if use ksu
 if [[ $USE_KSU == "yes" ]]; then
     zip_name=$(echo "$zip_name" | sed 's/OPTIONE/KSU/g')
+elif [[ $USE_XX_KSU == "yes" ]]; then
+    # if use ksu next
+    zip_name=$(echo "$zip_name" | sed 's/OPTIONE/KSU_NEXT/g')
+elif [[ $USE_MKSU == "yes" ]]; then
+    # if use ksu next
+    zip_name=$(echo "$zip_name" | sed 's/OPTIONE/KSU_NEXT/g')
 elif [[ $USE_KSU_NEXT == "yes" ]]; then
     # if use ksu next
     zip_name=$(echo "$zip_name" | sed 's/OPTIONE/KSU_NEXT/g')
@@ -207,6 +213,7 @@ if [[ $KSU_USE_MANUAL_HOOK == "yes" ]]; then
 	echo "CONFIG_KSU_MANUAL_HOOK=y" >> "$workdir/common/arch/arm64/configs/$DEFCONFIG"
 fi
 cd $workdir
+
 if [[ $USE_KSU_NEXT == "yes" ]]; then
 	if [[ $USE_KSU_SUSFS == "yes" ]]; then
 		curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s next-susfs
@@ -216,18 +223,25 @@ if [[ $USE_KSU_NEXT == "yes" ]]; then
     cd $workdir/KernelSU-Next
     KSU_VERSION=$(git describe --abbrev=0 --tags)
     echo "CONFIG_KSU=y" >> "$workdir/common/arch/arm64/configs/$DEFCONFIG"
-    cd $workdir
 	
 elif [[ $USE_KSU == "yes" ]]; then
-	if [[ $KSU_USE_MANUAL_HOOK == "yes" ]]; then
-		echo "CONFIG_KSU_MANUAL_HOOK=y" >> "$workdir/common/arch/arm64/configs/$DEFCONFIG"
-	fi
     curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/refs/heads/main/kernel/setup.sh" | bash -
     cd $workdir/KernelSU
     KSU_VERSION=$(git describe --abbrev=0 --tags)
     echo "CONFIG_KSU=y" >> "$workdir/common/arch/arm64/configs/$DEFCONFIG"
-    cd $workdir
+
+elif [[ $USE_XX_KSU == "yes" ]]; then
+    curl -LSs "https://raw.githubusercontent.com/backslashxx/KernelSU/refs/heads/magic/kernel/setup.sh" | bash -s magic
+    cd $workdir/KernelSU
+    KSU_VERSION=$(git describe --abbrev=0 --tags)
+    echo "CONFIG_KSU=y" >> "$workdir/common/arch/arm64/configs/$DEFCONFIG"
+
+elif [[ $USE_MKSU == "yes" ]]; then
+    curl -LSs "https://raw.githubusercontent.com/5ec1cff/KernelSU/refs/heads/magic/kernel/setup.sh" | bash -s main
+    cd $workdir/KernelSU
+    KSU_VERSION=$(git describe --abbrev=0 --tags)
 fi
+cd $workdir
 
 # SUSFS4KSU setup
 if [[ $USE_KSU_SUSFS == "yes" ]]; then
@@ -256,14 +270,19 @@ if [[ $USE_KSU_SUSFS == "yes" ]]; then
 	
 	
     # KSU+SUSFS setup
-    if [[ $USE_KSU == "yes" ]]; then
+    if [[ $USE_KSU == "yes" ]] || [[ USE_XX_KSU == "yes" ]] || [[ USE_MKSU == "yes" ]]; then
         cd $workdir/common
-        zip_name=$(echo "$zip_name" | sed 's/KSU/KSU-SUSFS/g')
+        zip_name=$(echo "$zip_name" | sed 's/KSU/XX_KSU-SUSFS/g')
         
         # Apply patch to KernelSU
         cd $workdir/KernelSU
         cp $susfs_patches/KernelSU/10_enable_susfs_for_ksu.patch .
-        patch -p1 <10_enable_susfs_for_ksu.patch || exit 1
+        patch -p1 --forward < 10_enable_susfs_for_ksu.patch || true
+        
+        # mksu susfs patch
+        if  [[ USE_MKSU == "yes" ]] || [[ USE_XX_KSU == "yes" ]]; then
+            cp $wild_patches/mksu_susfs.patch ./
+          patch -p1 < mksu_susfs.patch
 		
     # KSU-Next + SUSFS setup
     elif [[ $USE_KSU_NEXT == "yes" ]]; then
@@ -287,6 +306,11 @@ EOF
 )
 
 send_msg "$text"
+
+# Add + to kernel name for ksu version
+if  [ $USE_KSU == "yes" ] ||  [ $USE_KSU_NEXT == "yes" ] ||  [ $USE_MKSU == "yes" ] || [ $USE_XX_KSU == "yes" ] ; then
+    sed -i 's/Chise-$BUILD_DATE/Chise+-$BUILD_DATE/g' "$workdir/common/scripts/setlocalversion"
+fi
 
 # Build KSU
 cd $workdir/common
@@ -319,6 +343,8 @@ if [[ $build_type == "Multi" ]]; then
 	mkdir ./KernelSU
 	mv ./NoKSU ./Image
 	mv ./KSU ./KernelSU/Image
+else
+    mv ./KSU ./KernelSU/Image
 fi
 
 cd $homedir/out
