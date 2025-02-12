@@ -345,7 +345,8 @@ if [[ $build_type == "Multi" ]]; then
 	mv ./NoKSU ./Image
 	mv ./KSU ./KernelSU/Image
 else
-    mv ./KSU ./KernelSU/Image
+    mkdir ./KernelSU
+    mv ./KSU ./Image
 fi
 
 cd $homedir/out
