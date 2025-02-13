@@ -222,7 +222,7 @@ if [[ $USE_KSU == yes ]]; then
 		fi
 		cd $workdir/KernelSU-Next
 	fi
-echo "CONFIG_KSU=y" >> "$workdir/common/arch/arm64/configs/$KERNEL_DEFCONFIG"
+echo "CONFIG_KSU=y" >> "$workdir/common/arch/arm64/configs/$DEFCONFIG"
 [[ $USE_KSU_MKSU == "yes" ]] && KSU_VERSION="Magic KSU" || KSU_VERSION=$(git describe --abbrev=0 --tags)
 fi
 cd $workdir
