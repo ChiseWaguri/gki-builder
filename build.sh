@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+set -ex
 
 # Check chat id, telegram bot token, and GitHub token
 ret=0
@@ -150,8 +150,8 @@ git clone --depth=1 "https://github.com/ChiseWaguri/kernel-patches" $workdir/ker
 kernel_patches="$workdir/kernel-patches"
 
 # TheWildJames Patches
-git clone https://github.com/WildPlusKernel/kernel_patches $workdir/wild-patches
-wild_patches="$workdir/wild-patches"
+git clone https://github.com/WildPlusKernel/kernel_patches $workdir/wild_patches
+wild_patches="$workdir/wild_patches"
 
 # Apply patch
 cd $workdir/common
@@ -282,7 +282,7 @@ if [[ $USE_KSU_SUSFS == "yes" ]]; then
         # mksu susfs patch
         if  [[ USE_MKSU == "yes" ]] || [[ USE_XX_KSU == "yes" ]]; then
             cp $wild_patches/mksu_susfs.patch ./
-          patch -p1 < mksu_susfs.patch
+			patch -p1 < mksu_susfs.patch
         fi
 		
     # KSU-Next + SUSFS setup
@@ -309,7 +309,7 @@ EOF
 send_msg "$text"
 
 # Add + to kernel name for ksu version
-if  [ $USE_KSU == "yes" ] ||  [ $USE_KSU_NEXT == "yes" ] ||  [ $USE_MKSU == "yes" ] || [ $USE_XX_KSU == "yes" ] ; then
+if [ $USE_KSU == "yes" ] || [ $USE_KSU_NEXT == "yes" ] || [ $USE_MKSU == "yes" ] || [ $USE_XX_KSU == "yes" ]; then
     sed -i 's/Chise-$BUILD_DATE/Chise+-$BUILD_DATE/g' "$workdir/common/scripts/setlocalversion"
 fi
 
