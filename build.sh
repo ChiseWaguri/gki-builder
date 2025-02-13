@@ -147,7 +147,7 @@ if [[ $USE_KSU_OG == "yes" ]]; then
 elif [[ $USE_KSU_MKSU == "yes" ]]; then
     curl -LSs "https://raw.githubusercontent.com/5ec1cff/KernelSU/refs/heads/main/kernel/setup.sh" | bash -s main
     cd $WORKDIR/KernelSU
-elif [[ $USE_KSU_RKSU == "yes" ]]; then
+elif [[ $USE_KSU_RSU == "yes" ]]; then
     curl -LSs "https://raw.githubusercontent.com/rsuntk/KernelSU/refs/heads/main/kernel/setup.sh" | bash -s main
     cd $WORKDIR/KernelSU
 elif [[ $USE_KSU_XX == "yes" ]]; then
@@ -160,9 +160,6 @@ elif [[ $USE_KSU_NEXT == "yes" ]]; then
         curl -LSs https://raw.githubusercontent.com/rifsxd/KernelSU-Next/refs/heads/next/kernel/setup.sh | bash -
     fi
     cd $WORKDIR/KernelSU-Next
-elif [[ $USE_KSU_RSU == "yes" ]]; then
-    curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/refs/heads/main/kernel/setup.sh" | bash -s main
-    cd $WORKDIR/KernelSU
 fi
 [[ $USE_KSU_MKSU == "yes" ]] && KSU_VERSION="MKSU" || KSU_VERSION=$(git describe --abbrev=0 --tags)
 
@@ -192,30 +189,38 @@ elif [[ $USE_KSU == "yes" ]] && [[ $USE_KSU_SUSFS == "yes" ]]; then
         VARIANT="KSU-NextxSuSFS"
     fi
 	
-	# Apply patch to kernel (Kernel Side)
+	# Copy header files
 	cd $WORKDIR/common
-    cp $SUSFS_PATCHES/50_add_susfs_in_gki-$GKI_VERSION.patch .
-    patch -p1 < 50_add_susfs_in_gki-$GKI_VERSION.patch || exit 1
-
-    # Copy header files (Kernel Side)
     cp $SUSFS_PATCHES/include/linux/* ./include/linux/
-    cp $SUSFS_PATCHES/fs/* ./fs/
+	cp $SUSFS_PATCHES/fs/* ./fs/
+	
+	# Apply patch to kernel
+	cd $WORKDIR/common
+	cp $SUSFS_PATCHES/50_add_susfs_in_gki-$GKI_VERSION.patch .
+	patch -p1 < 50_add_susfs_in_gki-$GKI_VERSION.patch || exit 1
+	
+	
+    # KSU + SUSFS setup
+    if [[ $USE_KSU_OG == "yes" ]] || [[ USE_KSU_XX == "yes" ]] || [[ USE_KSU_MKSU == "yes" ]] || [[ USE_KSU_RKSU == "yes" ]]; then
 
-    # Apply patch to KernelSU (KSU Side)
-    if [[ $USE_KSU_OG == "yes" ]]; then
+        # Apply patch to KernelSU
         cd $WORKDIR/KernelSU
         cp $SUSFS_PATCHES/KernelSU/10_enable_susfs_for_ksu.patch .
-        patch -p1 < 10_enable_susfs_for_ksu.patch || exit 1
-	elif [[ $USE_KSU_MKSU == "yes" ]] || [[ $USE_KSU_RKSU == "yes" ]] || [[ $USE_KSU_XX == "yes" ]]; then
-		cd $WORKDIR/KernelSU
-        cp $SUSFS_PATCHES/KernelSU/10_enable_susfs_for_ksu.patch .
-		patch -p1 --forward < 10_enable_susfs_for_ksu.patch || true
-        cp $wild_patches/mksu_susfs.patch ./
-        patch -p1 < mksu_susfs.patch || exit 1
+        patch -p1 --forward < 10_enable_susfs_for_ksu.patch || nextpatch=true
+        
+        # mksu susfs patch
+        if  [[ $nextpatch == true ]]; then
+			if [ USE_KSU_MKSU == "yes" ]] || [[ USE_KSU_RSU == "yes" ]] || [[ USE_KSU_XX == "yes" ]]; then
+				cp $wild_patches/mksu_susfs.patch ./
+				patch -p1 < mksu_susfs.patch
+			fi
+        fi
+
+    # KSU-Next + SUSFS setup
+    elif [[ $USE_KSU_NEXT == "yes" ]]; then
+		# No need cuz we use the susfs branch.
     fi
-	
-	cd $WORKDIR
-    SUSFS_VERSION=$(grep -E '^#define SUSFS_VERSION' ./include/linux/susfs.h | cut -d' ' -f3 | sed 's/"//g')
+SUSFS_VERSION=$(grep -E '^#define SUSFS_VERSION' $WORKDIR/common/include/linux/susfs.h | cut -d' ' -f3 | sed 's/"//g')
 fi
 
 cd $WORKDIR
@@ -229,8 +234,6 @@ text=$(
 *Date*: \`$KBUILD_BUILD_TIMESTAMP\`
 *KSU*: \`$([[ $USE_KSU == "yes" ]] && echo "true" || echo "false")\`$([[ $USE_KSU == "yes" ]] && echo "
 *KSU Version*: \`$KSU_VERSION\`")
-*KSU-Next*: \`$([[ $USE_KSU_NEXT == "yes" ]] && echo "true" || echo "false")\`$([[ $USE_KSU_NEXT == "yes" ]] && echo "
-*KSU-Next Version*: \`$KSU_NEXT_VERSION\`")
 *SUSFS*: \`$([[ $USE_KSU_SUSFS == "yes" ]] && echo "true" || echo "false")\`$([[ $USE_KSU_SUSFS == "yes" ]] && echo "
 *SUSFS Version*: \`$SUSFS_VERSION\`")
 *Compiler*: \`$COMPILER_STRING\`
