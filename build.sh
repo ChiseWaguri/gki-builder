@@ -218,7 +218,7 @@ elif [[ $USE_KSU == "yes" ]] && [[ $USE_KSU_SUSFS == "yes" ]]; then
 
     # KSU-Next + SUSFS setup
     elif [[ $USE_KSU_NEXT == "yes" ]]; then
-		# No need cuz we use the susfs branch.
+		: # No need cuz we use the susfs branch.
     fi
 SUSFS_VERSION=$(grep -E '^#define SUSFS_VERSION' $WORKDIR/common/include/linux/susfs.h | cut -d' ' -f3 | sed 's/"//g')
 fi
