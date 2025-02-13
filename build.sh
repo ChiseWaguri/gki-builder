@@ -191,9 +191,13 @@ elif [[ $USE_KSU == "yes" ]] && [[ $USE_KSU_SUSFS == "yes" ]]; then
     elif [[ $USE_KSU_NEXT == "yes" ]]; then
         VARIANT="KSU-NextxSuSFS"
     fi
+	
+	# Apply patch to kernel (Kernel Side)
+	cd $WORKDIR/common
+    cp $SUSFS_PATCHES/50_add_susfs_in_gki-$GKI_VERSION.patch .
+    patch -p1 < 50_add_susfs_in_gki-$GKI_VERSION.patch || exit 1
 
     # Copy header files (Kernel Side)
-    cd $WORKDIR/common
     cp $SUSFS_PATCHES/include/linux/* ./include/linux/
     cp $SUSFS_PATCHES/fs/* ./fs/
 
@@ -209,12 +213,8 @@ elif [[ $USE_KSU == "yes" ]] && [[ $USE_KSU_SUSFS == "yes" ]]; then
         cp $wild_patches/mksu_susfs.patch ./
         patch -p1 < mksu_susfs.patch || exit 1
     fi
-
-    # Apply patch to kernel (Kernel Side)
-    cd $WORKDIR/common
-    cp $SUSFS_PATCHES/50_add_susfs_in_gki-$GKI_VERSION.patch .
-    patch -p1 <50_add_susfs_in_gki-$GKI_VERSION.patch || exit 1
-
+	
+	cd $WORKDIR
     SUSFS_VERSION=$(grep -E '^#define SUSFS_VERSION' ./include/linux/susfs.h | cut -d' ' -f3 | sed 's/"//g')
 fi
 
