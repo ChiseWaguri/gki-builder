@@ -20,8 +20,5 @@
 - [x] GKI 5.10
 - [ ] GKI >5.10
 
-### My Releases and Kernel Source
-You can find my releases [here](https://github.com/Asteroidd21/releases) and the kernel source [here](https://github.com/Asteroidd21/gki_android12-5.10)
-
 ### LICENSE
 This repository is under the [WTFPL](http://www.wtfpl.net/) license

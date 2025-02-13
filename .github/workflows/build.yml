@@ -23,6 +23,7 @@ on:
      - "KernelSU-Next"
      - "MKSU"
      - "backslashxx's KernelSU"
+     - "Rissu KernelSU Fork (RSU)"
      - "Non-KSU"
 
 
@@ -66,15 +67,20 @@ jobs:
             export USE_KSU_SUSFS="yes"
        fi
        
+       if [[ ! -z "${{ inputs.KernelSU }}" ]]; then
+            export USE_KSU="yes"
+       fi
 
        if [[ "${{ inputs.KernelSU }}" == "OG KernelSU" ]]; then
-            export USE_KSU="yes"
+            export USE_KSU_OG="yes"
        elif [[ "${{ inputs.KernelSU }}" == "KernelSU-Next" ]]; then
             export USE_KSU_NEXT="yes"
        elif [[ "${{ inputs.KernelSU }}" == "MKSU" ]]; then
-            export USE_MKSU="yes"
+            export USE_KSU_MKSU="yes"
        elif [[ "${{ inputs.KernelSU }}" == "backslashxx's KernelSU" ]]; then
-            export USE_XX_KSU="yes"
+            export USE_KSU_XX="yes"
+       elif [[ "${{ inputs.KernelSU }}" == "Rissu KernelSU Fork (RSU)" ]]; then
+            export USE_KSU_RKSU="yes"
        fi
        
        if [[ "${{ inputs.RELEASEGH }}" == "true" ]]; then
