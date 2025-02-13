@@ -227,10 +227,56 @@ echo "CONFIG_KSU=y" >> "$workdir/common/arch/arm64/configs/$DEFCONFIG"
 fi
 cd $workdir
 
+# SUSFS4KSU setup
+if [[ $USE_KSU_SUSFS == "yes" ]] && [[ $USE_KSU != "yes" ]]; then
+    echo "error: You can't use SuSFS without KSU enabled!"
+    exit 1
+elif [[ $USE_KSU == "yes" ]] && [[ $USE_KSU_SUSFS == "yes" ]]; then
+
+    git clone --depth=1 https://gitlab.com/simonpunk/susfs4ksu -b gki-$GKI_VERSION $workdir/susfs4ksu
+    SUSFS_PATCHES="$workdir/susfs4ksu/kernel_patches"
+	
+	# Copy header files
+	cd $workdir/common
+    cp $SUSFS_PATCHES/include/linux/* ./include/linux/
+	cp $SUSFS_PATCHES/fs/* ./fs/
+	
+	# Apply patch to kernel
+	cd $workdir/common
+	cp $SUSFS_PATCHES/50_add_susfs_in_gki-$GKI_VERSION.patch .
+	patch -p1 < 50_add_susfs_in_gki-$GKI_VERSION.patch || exit 1
+	
+	
+    # KSU + SUSFS setup
+    if [[ $USE_KSU_OG == "yes" ]] || [[ $USE_KSU_XX == "yes" ]] || [[ $USE_KSU_MKSU == "yes" ]] || [[ $USE_KSU_RKSU == "yes" ]]; then
+
+        # Apply patch to KernelSU
+        cd $workdir/KernelSU
+        cp $SUSFS_PATCHES/KernelSU/10_enable_susfs_for_ksu.patch .
+        patch -p1 --forward < 10_enable_susfs_for_ksu.patch || nextpatch=true
+        
+        # mksu susfs patch
+        if  [[ $nextpatch == true ]]; then
+			if [ $USE_KSU_MKSU == "yes" ]] || [[ $USE_KSU_RKSU == "yes" ]] || [[ $USE_KSU_XX == "yes" ]]; then
+				cp $wild_patches/mksu_susfs.patch ./
+				patch -p1 < mksu_susfs.patch
+			fi
+        fi
+
+    # KSU-Next + SUSFS setup
+    elif [[ $USE_KSU_NEXT == "yes" ]]; then
+		: # No need cuz we use the susfs branch.
+    fi
+SUSFS_VERSION=$(grep -E '^#define SUSFS_VERSION' $workdir/common/include/linux/susfs.h | cut -d' ' -f3 | sed 's/"//g')
+fi
+
+
+
+
 text=$(
     cat <<EOF
 *~~~ Compiling $KERNEL_NAME ~~~*
-*KernelSU*: \`Multi Part 2 - $([[ $USE_KSU == "yes" ]] && echo "yes")$([[ $USE_KSU_NEXT == "yes" ]] && echo "KernelSU-Next" || echo "-")\`$([[ $USE_KSU == "yes" ]] || [[ $USE_KSU_NEXT == "yes" ]] && echo "
+*KernelSU*: \`$([[ $USE_KSU == "yes" ]] && echo "yes")$([[ $USE_KSU_NEXT == "yes" ]] && echo "KernelSU-Next" || echo "-")\`$([[ $USE_KSU == "yes" ]] || [[ $USE_KSU_NEXT == "yes" ]] && echo "
 *KSU Version*: \`$KSU_VERSION\`")
 $([[ $USE_KSU == "yes" ]] || [[ $USE_KSU_NEXT == "yes" ]] && echo "*SUSFS*: \`$([[ $USE_KSU_SUSFS == "yes" ]] && echo "true" || echo "false")\`$([[ $USE_KSU_SUSFS == "yes" ]] && echo "
 *SUSFS Version*: \`$SUSFS_VERSION\`")")
