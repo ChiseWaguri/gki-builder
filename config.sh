@@ -36,8 +36,8 @@ export USE_AOSP_CLANG="true"
 export AOSP_CLANG_VERSION="r547379"
 
 # Custom clang
-export USE_CUSTOM_CLANG="false"
-export CUSTOM_CLANG_SOURCE="" # git repo or tar file
+export USE_CUSTOM_CLANG="yes"
+export CUSTOM_CLANG_SOURCE="https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/30af425ee5c159ed7b9b2ac895344858396686eb/clang-r547379.tar.gz" # git repo or tar file
 export CUSTOM_CLANG_BRANCH="" # if from git
 
 # Make flags

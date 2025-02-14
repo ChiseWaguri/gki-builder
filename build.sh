@@ -55,15 +55,19 @@ if [[ $USE_AOSP_CLANG == "true" ]]; then
 elif [[ $USE_CUSTOM_CLANG == "true" ]]; then
     if [[ $CUSTOM_CLANG_SOURCE =~ git ]]; then
         if [[ $CUSTOM_CLANG_SOURCE == *'.tar.'* ]]; then
-            wget -q $CUSTOM_CLANG_SOURCE
-            tar -C $workdir/clang/ -xf $workdir/*.tar.*
+            wget -qO $workdir/clang.tar.gz $CUSTOM_CLANG_SOURCE
+			tar -xf $workdir/clang.tar.gz -C $workdir/clang/
             rm -f $workdir/*.tar.*
         else
             rm -rf $workdir/clang
             git clone $CUSTOM_CLANG_SOURCE -b $CUSTOM_CLANG_BRANCH $workdir/clang --depth=1
         fi
+	elif [[ $CUSTOM_CLANG_SOURCE == *'.tar.'* ]]; then
+            wget -qO $workdir/clang.tar.gz $CUSTOM_CLANG_SOURCE
+			tar -xf $workdir/clang.tar.gz -C $workdir/clang/
+            rm -f $workdir/*.tar.*
     else
-        echo "Clang source other than git is not supported."
+        echo "Clang source other than git or tar file is not supported."
         exit 1
     fi
 elif [[ $USE_AOSP_CLANG == "true" ]] && [[ $USE_CUSTOM_CLANG == "true" ]]; then
