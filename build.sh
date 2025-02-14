@@ -85,20 +85,6 @@ fi
 # Extract clang version
 COMPILER_STRING=$(clang -v 2>&1 | head -n 1 | sed 's/(https..*//' | sed 's/ version//')
 
-# Remove KernelSU in driver in kernel source if exist
-if [ -d "$workdir/common/drivers/staging/kernelsu" ]; then
-	sed -i '/kernelsu/d' "$workdir/common/drivers/staging/Kconfig"
-	sed -i '/kernelsu/d' "$workdir/common/drivers/staging/Makefile"
-	rm -rf "$workdir/common/drivers/staging/kernelsu"
-fi
-if [ -d "$workdir/common/drivers/kernelsu" ]; then
-	sed -i '/kernelsu/d' "$workdir/common/drivers/Kconfig"
-	sed -i '/kernelsu/d' "$workdir/common/drivers/Makefile"
-	rm -rf "$workdir/common/drivers/kernelsu"
-fi
-
-
-
 # LTO Configuration
 
 if [[ $LTO_CONFIG == "NONE" ]]; then
@@ -191,14 +177,26 @@ if [[ $build_type == "Multi" ]]; then
 fi
 
 # KernelSU setup
-if [[ $KSU_USE_MANUAL_HOOK == "yes" ]]; then
+if [[ $MELT_KSU_USE_MANUAL_HOOK == "yes" ]]; then
 	echo "CONFIG_KSU_MANUAL_HOOK=y" >> "$workdir/common/arch/arm64/configs/$DEFCONFIG"
+fi
+if [[ $USE_KSU_SUSFS == "yes" ]] || [[ $USE_KSU_OG != "yes" ]]
+# Remove KernelSU in driver in kernel source if exist
+if [ -d "$workdir/common/drivers/staging/kernelsu" ]; then
+	sed -i '/kernelsu/d' "$workdir/common/drivers/staging/Kconfig"
+	sed -i '/kernelsu/d' "$workdir/common/drivers/staging/Makefile"
+	rm -rf "$workdir/common/drivers/staging/kernelsu"
+fi
+if [ -d "$workdir/common/drivers/kernelsu" ]; then
+	sed -i '/kernelsu/d' "$workdir/common/drivers/Kconfig"
+	sed -i '/kernelsu/d' "$workdir/common/drivers/Makefile"
+	rm -rf "$workdir/common/drivers/kernelsu"
 fi
 
 cd $workdir
 
 if [[ $USE_KSU == yes ]]; then
-	if [[ $USE_KSU_OG == "yes" ]]; then
+	if [[ $USE_KSU_OG == "yes" ]] && [[ $USE_KSU_SUSFS == "yes" ]]; then
 		curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/refs/heads/main/kernel/setup.sh" | bash -
 		cd $workdir/KernelSU
 
@@ -251,8 +249,7 @@ elif [[ $USE_KSU == "yes" ]] && [[ $USE_KSU_SUSFS == "yes" ]]; then
 	# Apply patch to kernel
 	cd $workdir/common
 	cp $SUSFS_PATCHES/50_add_susfs_in_gki-$GKI_VERSION.patch .
-	patch -p1 < 50_add_susfs_in_gki-$GKI_VERSION.patch || exit 1
-	
+	patch -p1 < 50_add_susfs_in_gki-$GKI_VERSION.patch || susfs_gki_patch_is_rejected=true
 	
     # KSU + SUSFS setup
     if [[ $USE_KSU_OG == "yes" ]] || [[ $USE_KSU_XX == "yes" ]] || [[ $USE_KSU_MKSU == "yes" ]]; then
@@ -260,20 +257,32 @@ elif [[ $USE_KSU == "yes" ]] && [[ $USE_KSU_SUSFS == "yes" ]]; then
         # Apply patch to KernelSU
         cd $workdir/KernelSU
         cp $SUSFS_PATCHES/KernelSU/10_enable_susfs_for_ksu.patch .
-        patch -p1 --forward < 10_enable_susfs_for_ksu.patch || nextpatch=true
-        
-        # mksu susfs patch
-        if  [[ $nextpatch == true ]]; then
-			if [ $USE_KSU_MKSU == "yes" ]] || [[ $USE_KSU_RKSU == "yes" ]] || [[ $USE_KSU_XX == "yes" ]]; then
+        patch -p1 --forward < 10_enable_susfs_for_ksu.patch || susfs_ksu_patch_is_rejected=true
+
+        if  [[ $susfs_ksu_patch_is_rejected == true ]]; then
+
+			# mksu susfs patch
+			if [ $USE_KSU_MKSU == "yes" ]] || [[ $USE_KSU_XX == "yes" ]]; then
 				cp $wild_patches/mksu_susfs.patch ./
 				patch -p1 < mksu_susfs.patch
 			fi
+			
         fi
 
     # KSU-Next + SUSFS setup
     elif [[ $USE_KSU_NEXT == "yes" ]] || [[ $USE_KSU_RKSU == "yes" ]]; then
 		: # No need cuz we use the susfs branch.
     fi
+	
+	if  [[ $susfs_gki_patch_is_rejected == true ]]; then
+		
+		# Melt susfs inode.c fix
+		cd $WORKDIR
+		cp $kernel_patches/inode.c_fix.patch ./
+		patch -p1 < inode.c_fix.patch
+	fi
+
+# Grab susfs version
 SUSFS_VERSION=$(grep -E '^#define SUSFS_VERSION' $workdir/common/include/linux/susfs.h | cut -d' ' -f3 | sed 's/"//g')
 fi
 
