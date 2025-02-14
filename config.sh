@@ -12,8 +12,8 @@ export ANYKERNEL_REPO="https://github.com/ChiseWaguri/Anykernel3"
 export ANYKERNEL_BRANCH="gki"
 
 # Kernel
-export KERNEL_REPO="https://github.com/ChiseWaguri/android_kernel_xiaomi_marble"
-export KERNEL_BRANCH="next-susfs"
+export KERNEL_REPO="https://github.com/pzqqt/android_kernel_xiaomi_marble"
+export KERNEL_BRANCH="melt-rebase"
 export DEFCONFIG="marble_defconfig"
 export KERNEL_IMAGE="$workdir/out/arch/arm64/boot/Image"
 
