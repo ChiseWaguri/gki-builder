@@ -279,7 +279,7 @@ elif [[ $USE_KSU == "yes" ]] && [[ $USE_KSU_SUSFS == "yes" ]]; then
 		# Melt susfs inode.c fix
 		cd $WORKDIR
 		cp $kernel_patches/inode.c_fix.patch ./
-		patch -p1 < inode.c_fix.patch
+		patch -p1 < inode.c_fix.patch || exit 1
 	fi
 
 # Grab susfs version
