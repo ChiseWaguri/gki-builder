@@ -283,7 +283,7 @@ elif [[ $USE_KSU == "yes" ]] && [[ $USE_KSU_SUSFS == "yes" ]]; then
 	if  [[ $susfs_gki_patch_is_rejected == true ]]; then
 		
 		# Melt susfs inode.c fix
-		cd $WORKDIR
+		cd $WORKDIR/common
 		cp $kernel_patches/inode.c_fix.patch ./
 		patch -p1 < inode.c_fix.patch || exit 1
 	fi
