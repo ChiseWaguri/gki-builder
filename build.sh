@@ -180,17 +180,19 @@ fi
 if [[ $MELT_KSU_USE_MANUAL_HOOK == "yes" ]]; then
 	echo "CONFIG_KSU_MANUAL_HOOK=y" >> "$workdir/common/arch/arm64/configs/$DEFCONFIG"
 fi
-if [[ $USE_KSU_SUSFS == "yes" ]] || [[ $USE_KSU_OG != "yes" ]]
+
+if [[ $USE_KSU_SUSFS == "yes" ]] || [[ $USE_KSU_OG != "yes" ]]; then
 # Remove KernelSU in driver in kernel source if exist
-if [ -d "$workdir/common/drivers/staging/kernelsu" ]; then
-	sed -i '/kernelsu/d' "$workdir/common/drivers/staging/Kconfig"
-	sed -i '/kernelsu/d' "$workdir/common/drivers/staging/Makefile"
-	rm -rf "$workdir/common/drivers/staging/kernelsu"
-fi
-if [ -d "$workdir/common/drivers/kernelsu" ]; then
-	sed -i '/kernelsu/d' "$workdir/common/drivers/Kconfig"
-	sed -i '/kernelsu/d' "$workdir/common/drivers/Makefile"
-	rm -rf "$workdir/common/drivers/kernelsu"
+	if [ -d "$workdir/common/drivers/staging/kernelsu" ]; then
+		sed -i '/kernelsu/d' "$workdir/common/drivers/staging/Kconfig"
+		sed -i '/kernelsu/d' "$workdir/common/drivers/staging/Makefile"
+		rm -rf "$workdir/common/drivers/staging/kernelsu"
+	fi
+	if [ -d "$workdir/common/drivers/kernelsu" ]; then
+		sed -i '/kernelsu/d' "$workdir/common/drivers/Kconfig"
+		sed -i '/kernelsu/d' "$workdir/common/drivers/Makefile"
+		rm -rf "$workdir/common/drivers/kernelsu"
+	fi
 fi
 
 cd $workdir
