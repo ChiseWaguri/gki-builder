@@ -211,7 +211,11 @@ if [[ $USE_KSU == yes ]]; then
 		cd $workdir/KernelSU
 
 	elif [[ $USE_KSU_RKSU == "yes" ]]; then
-		curl -LSs "https://raw.githubusercontent.com/rsuntk/KernelSU/refs/heads/main/kernel/setup.sh" | bash -
+		if [[ $USE_KSU_SUSFS == "yes" ]]; then
+			curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s susfs-v1.5.5
+		else
+			curl -LSs "https://raw.githubusercontent.com/rsuntk/KernelSU/refs/heads/main/kernel/setup.sh" | bash -
+		fi
 		cd $workdir/KernelSU
 		
 	elif [[ $USE_KSU_NEXT == "yes" ]]; then
@@ -223,7 +227,10 @@ if [[ $USE_KSU == yes ]]; then
 		cd $workdir/KernelSU-Next
 	fi
 echo "CONFIG_KSU=y" >> "$workdir/common/arch/arm64/configs/$DEFCONFIG"
-[[ $USE_KSU_MKSU == "yes" ]] && KSU_VERSION="Magic KSU" || KSU_VERSION=$(git describe --abbrev=0 --tags)
+[[ $USE_KSU_MKSU == "yes" ]] && KSU_VERSION="Magic KSU"
+[[ $USE_KSU_XX == "yes" ]] && KSU_VERSION="=xx's KSU Fork $(git describe --abbrev=0 --tags)"
+[[ $USE_KSU_RKSU == "yes" ]] && KSU_VERSION="=Rissu KSU Fork $(git describe --abbrev=0 --tags)"
+[[ $USE_KSU_OG == "yes" ]] && KSU_VERSION="=OG KSU $(git describe --abbrev=0 --tags)"
 fi
 cd $workdir
 
@@ -248,7 +255,7 @@ elif [[ $USE_KSU == "yes" ]] && [[ $USE_KSU_SUSFS == "yes" ]]; then
 	
 	
     # KSU + SUSFS setup
-    if [[ $USE_KSU_OG == "yes" ]] || [[ $USE_KSU_XX == "yes" ]] || [[ $USE_KSU_MKSU == "yes" ]] || [[ $USE_KSU_RKSU == "yes" ]]; then
+    if [[ $USE_KSU_OG == "yes" ]] || [[ $USE_KSU_XX == "yes" ]] || [[ $USE_KSU_MKSU == "yes" ]]; then
 
         # Apply patch to KernelSU
         cd $workdir/KernelSU
@@ -264,7 +271,7 @@ elif [[ $USE_KSU == "yes" ]] && [[ $USE_KSU_SUSFS == "yes" ]]; then
         fi
 
     # KSU-Next + SUSFS setup
-    elif [[ $USE_KSU_NEXT == "yes" ]]; then
+    elif [[ $USE_KSU_NEXT == "yes" ]] || [[ $USE_KSU_RKSU == "yes" ]]; then
 		: # No need cuz we use the susfs branch.
     fi
 SUSFS_VERSION=$(grep -E '^#define SUSFS_VERSION' $workdir/common/include/linux/susfs.h | cut -d' ' -f3 | sed 's/"//g')
