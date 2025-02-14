@@ -210,7 +210,7 @@ if [[ $USE_KSU == yes ]]; then
 
 	elif [[ $USE_KSU_RKSU == "yes" ]]; then
 		if [[ $USE_KSU_SUSFS == "yes" ]]; then
-			curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s susfs-v1.5.5
+			curl -LSs "https://raw.githubusercontent.com/rsuntk/KernelSU/refs/heads/main/kernel/setup.sh" | bash -s susfs-v1.5.5
 		else
 			curl -LSs "https://raw.githubusercontent.com/rsuntk/KernelSU/refs/heads/main/kernel/setup.sh" | bash -
 		fi
