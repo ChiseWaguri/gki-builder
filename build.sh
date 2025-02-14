@@ -48,7 +48,6 @@ cd $workdir
 # Download Toolchains
 mkdir $workdir/clang
 if [[ $USE_AOSP_CLANG == "true" ]]; then
-    echo "Downloading https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-$AOSP_CLANG_VERSION.tar.gz"
     wget -qO $workdir/clang.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-$AOSP_CLANG_VERSION.tar.gz
     tar -xf $workdir/clang.tar.gz -C $workdir/clang/
     rm -f $workdir/clang.tar.gz
@@ -283,7 +282,7 @@ elif [[ $USE_KSU == "yes" ]] && [[ $USE_KSU_SUSFS == "yes" ]]; then
 	if  [[ $susfs_gki_patch_is_rejected == true ]]; then
 		
 		# Melt susfs inode.c fix
-		cd $WORKDIR/common
+		cd $workdir/common
 		cp $kernel_patches/inode.c_fix.patch ./
 		patch -p1 < inode.c_fix.patch || exit 1
 	fi

@@ -32,11 +32,11 @@ export LTO_CONFIG="default"
 export GKI_RELEASES_REPO="https://github.com/ChiseWaguri/releases"
 
 # AOSP Clang
-export USE_AOSP_CLANG="true"
+export USE_AOSP_CLANG="false"
 export AOSP_CLANG_VERSION="r547379"
 
 # Custom clang
-export USE_CUSTOM_CLANG="yes"
+export USE_CUSTOM_CLANG="true"
 export CUSTOM_CLANG_SOURCE="https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/30af425ee5c159ed7b9b2ac895344858396686eb/clang-r547379.tar.gz" # git repo or tar file
 export CUSTOM_CLANG_BRANCH="" # if from git
 
