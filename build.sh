@@ -113,6 +113,9 @@ elif [[ $LTO_CONFIG == "FULL" ]]; then
 
 fi
 
+# LOS marble merge config
+cat "$workdir/common/arch/arm64/configs/vendor/marble*" "$workdir/common/arch/arm64/configs/$DEFCONFIG"
+
 git config --global user.email "kontol@example.com"
 git config --global user.name "Your Name"
 
