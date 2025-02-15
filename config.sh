@@ -12,7 +12,7 @@ export ANYKERNEL_REPO="https://github.com/ChiseWaguri/Anykernel3"
 export ANYKERNEL_BRANCH="gki"
 
 # Kernel
-export KERNEL_REPO="https://github.com/cupid-development/android_kernel_xiaomi_sm8450/tree/lineage-22.1"
+export KERNEL_REPO="https://github.com/cupid-development/android_kernel_xiaomi_sm8450"
 export KERNEL_BRANCH="lineage-22.1"
 export DEFCONFIG="gki_defconfig"
 export KERNEL_IMAGE="$workdir/out/arch/arm64/boot/Image"
