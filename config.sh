@@ -12,9 +12,9 @@ export ANYKERNEL_REPO="https://github.com/ChiseWaguri/Anykernel3"
 export ANYKERNEL_BRANCH="gki"
 
 # Kernel
-export KERNEL_REPO="https://github.com/pzqqt/android_kernel_xiaomi_marble"
-export KERNEL_BRANCH="melt-rebase"
-export DEFCONFIG="marble_defconfig"
+export KERNEL_REPO="https://github.com/cupid-development/android_kernel_xiaomi_sm8450/tree/lineage-22.1"
+export KERNEL_BRANCH="lineage-22.1"
+export DEFCONFIG="gki_defconfig"
 export KERNEL_IMAGE="$workdir/out/arch/arm64/boot/Image"
 
 # If you want to revert kernel repo to a specific commit hash/ or tag for some purposes
@@ -22,7 +22,7 @@ export KERNEL_DEPTH=1 # depth needed to revert to the commit hash, set it to 1 i
 export KERNEL_COMMIT_HASH="" # commit hash if u need to revert to some commit for testing purposes
 
 # Melt KSU Manual Hook
-export MELT_KSU_USE_MANUAL_HOOK=yes # set to yes to activate, else off
+export MELT_KSU_USE_MANUAL_HOOK=no # set to yes to activate, else off
 
 # LTO
 export LTO_CONFIG="default" 
