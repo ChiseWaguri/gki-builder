@@ -22,7 +22,7 @@ export KERNEL_DEPTH=1 # depth needed to revert to the commit hash, set it to 1 i
 export KERNEL_COMMIT_HASH="" # commit hash if u need to revert to some commit for testing purposes
 
 # Melt KSU Manual Hook
-export MELT_KSU_USE_MANUAL_HOOK= # set to yes to activate, else off
+export MELT_KSU_USE_MANUAL_HOOK=yes # set to yes to activate, else off
 
 # LTO
 export LTO_CONFIG="default" 
