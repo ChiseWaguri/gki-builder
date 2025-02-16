@@ -28,43 +28,45 @@ mkdir -p android-kernel && cd android-kernel
 # Variables
 workdir=$(pwd)
 export workdir=$workdir
-source $workdir/../config.sh
+source ../config.sh
 
 # Import functions
-source $workdir/../functions.sh
+source ../functions.sh
 
-# Clone kernel source
-git clone --depth=$KERNEL_DEPTH $KERNEL_REPO -b $KERNEL_BRANCH $workdir/common
+# Clone source
+git clone https://gitlab.com/simonpunk/susfs4ksu -b gki-android12-5.10
+git clone https://github.com/ChiseWaguri/kernel-patches ./chise_patches
+git clone https://github.com/WildPlusKernel/kernel_patches ./wild_patches
+git clone --depth=$KERNEL_DEPTH $KERNEL_REPO -b $KERNEL_BRANCH common
 cd $workdir/common
 if [[ -z "$KERNEL_COMMIT_HASH" ]]; then
     git checkout $KERNEL_COMMIT_HASH
 fi
 
 # Extract kernel version
-cd $workdir/common
 KERNEL_VERSION=$(make kernelversion)
 cd $workdir
 
 # Download Toolchains
-mkdir $workdir/clang
+mkdir clang
 if [[ $USE_AOSP_CLANG == "true" ]]; then
-    wget -qO $workdir/clang.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-$AOSP_CLANG_VERSION.tar.gz
-    tar -xf $workdir/clang.tar.gz -C $workdir/clang/
-    rm -f $workdir/clang.tar.gz
+    wget -qO clang.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-$AOSP_CLANG_VERSION.tar.gz
+    tar -xf clang.tar.gz -C clang/
+    rm -f clang.tar.gz
 elif [[ $USE_CUSTOM_CLANG == "true" ]]; then
     if [[ $CUSTOM_CLANG_SOURCE =~ git ]]; then
         if [[ $CUSTOM_CLANG_SOURCE == *'.tar.'* ]]; then
-            wget -qO $workdir/clang.tar.gz $CUSTOM_CLANG_SOURCE
-			tar -xf $workdir/clang.tar.gz -C $workdir/clang/
-            rm -f $workdir/*.tar.*
+            wget -qO clang.tar.gz $CUSTOM_CLANG_SOURCE
+			tar -xf clang.tar.gz -C $workdir/clang/
+            rm -f *.tar.*
         else
-            rm -rf $workdir/clang
+            rm -rf clang
             git clone $CUSTOM_CLANG_SOURCE -b $CUSTOM_CLANG_BRANCH $workdir/clang --depth=1
         fi
 	elif [[ $CUSTOM_CLANG_SOURCE == *'.tar.'* ]]; then
-            wget -qO $workdir/clang.tar.gz $CUSTOM_CLANG_SOURCE
-			tar -xf $workdir/clang.tar.gz -C $workdir/clang/
-            rm -f $workdir/*.tar.*
+            wget -qO clang.tar.gz $CUSTOM_CLANG_SOURCE
+			tar -xf clang.tar.gz -C $workdir/clang/
+            rm -f *.tar.*
     else
         echo "Clang source other than git or tar file is not supported."
         exit 1
@@ -78,8 +80,8 @@ else
 fi
 
 # Clone binutils if they don't exist
-if ! ls $workdir/clang/bin | grep -q 'aarch64-linux-gnu'; then
-    git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gas/linux-x86 -b main $workdir/gas
+if ! ls clang/bin | grep -q 'aarch64-linux-gnu'; then
+    git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gas/linux-x86 -b main gas
     export PATH="$workdir/clang/bin:$workdir/gas:$PATH"
 else
     export PATH="$workdir/clang/bin:$PATH"
@@ -89,56 +91,45 @@ fi
 COMPILER_STRING=$(clang -v 2>&1 | head -n 1 | sed 's/(https..*//' | sed 's/ version//')
 
 # LTO Configuration
-
+cd common
 if [[ $LTO_CONFIG == "NONE" ]]; then
-    sed -i 's/CONFIG_LTO=y/CONFIG_LTO=n/' "$workdir/common/arch/arm64/configs/$DEFCONFIG"
-    sed -i 's/CONFIG_LTO_CLANG_FULL=y/CONFIG_LTO_CLANG_FULL=n/' "$workdir/common/arch/arm64/configs/$DEFCONFIG"
-    sed -i 's/CONFIG_LTO_CLANG_THIN=y/CONFIG_LTO_CLANG_THIN=n/' "$workdir/common/arch/arm64/configs/$DEFCONFIG"
-    sed -i 's/CONFIG_THINLTO=y/CONFIG_THINLTO=n/' "$workdir/common/arch/arm64/configs/$DEFCONFIG"
-    echo "CONFIG_LTO_CLANG_NONE=y" >> "$workdir/common/arch/arm64/configs/$DEFCONFIG"
-    echo "CONFIG_LTO_NONE=y" >> "$workdir/common/arch/arm64/configs/$DEFCONFIG"
+    sed -i 's/CONFIG_LTO=y/CONFIG_LTO=n/' "arch/arm64/configs/$DEFCONFIG"
+    sed -i 's/CONFIG_LTO_CLANG_FULL=y/CONFIG_LTO_CLANG_FULL=n/' "arch/arm64/configs/$DEFCONFIG"
+    sed -i 's/CONFIG_LTO_CLANG_THIN=y/CONFIG_LTO_CLANG_THIN=n/' "arch/arm64/configs/$DEFCONFIG"
+    sed -i 's/CONFIG_THINLTO=y/CONFIG_THINLTO=n/' "arch/arm64/configs/$DEFCONFIG"
+    echo "CONFIG_LTO_CLANG_NONE=y" >> "arch/arm64/configs/$DEFCONFIG"
+    echo "CONFIG_LTO_NONE=y" >> "arch/arm64/configs/$DEFCONFIG"
     
 elif [[ $LTO_CONFIG == "default" ]]; then
     echo "Using default LTO Config from '$DEFCONFIG'"
     
 elif [[ $LTO_CONFIG == "THIN" ]]; then
-    sed -i 's/CONFIG_LTO=n/CONFIG_LTO=y/' "$workdir/common/arch/arm64/configs/$DEFCONFIG"
-    sed -i 's/CONFIG_LTO_CLANG_FULL=y/CONFIG_LTO_CLANG_THIN=y/' "$workdir/common/arch/arm64/configs/$DEFCONFIG"
-    sed -i 's/CONFIG_LTO_CLANG_NONE=y/CONFIG_LTO_CLANG_THIN=y/' "$workdir/common/arch/arm64/configs/$DEFCONFIG"
+    sed -i 's/CONFIG_LTO=n/CONFIG_LTO=y/' "arch/arm64/configs/$DEFCONFIG"
+    sed -i 's/CONFIG_LTO_CLANG_FULL=y/CONFIG_LTO_CLANG_THIN=y/' "arch/arm64/configs/$DEFCONFIG"
+    sed -i 's/CONFIG_LTO_CLANG_NONE=y/CONFIG_LTO_CLANG_THIN=y/' "arch/arm64/configs/$DEFCONFIG"
     
 elif [[ $LTO_CONFIG == "FULL" ]]; then
-    sed -i 's/CONFIG_LTO=n/CONFIG_LTO=y/' "$workdir/common/arch/arm64/configs/$DEFCONFIG"
-    sed -i 's/CONFIG_LTO_CLANG_THIN=y/CONFIG_LTO_CLANG_FULL=y/' "$workdir/common/arch/arm64/configs/$DEFCONFIG"
-    sed -i 's/CONFIG_LTO_CLANG_NONE=y/CONFIG_LTO_CLANG_FULL=y/' "$workdir/common/arch/arm64/configs/$DEFCONFIG"
+    sed -i 's/CONFIG_LTO=n/CONFIG_LTO=y/' "arch/arm64/configs/$DEFCONFIG"
+    sed -i 's/CONFIG_LTO_CLANG_THIN=y/CONFIG_LTO_CLANG_FULL=y/' "arch/arm64/configs/$DEFCONFIG"
+    sed -i 's/CONFIG_LTO_CLANG_NONE=y/CONFIG_LTO_CLANG_FULL=y/' "arch/arm64/configs/$DEFCONFIG"
 
 fi
 
 git config --global user.email "kontol@example.com"
 git config --global user.name "Your Name"
 
-# Kernel Patches
-git clone --depth=1 "https://github.com/ChiseWaguri/kernel-patches" $workdir/kernel-patches
-kernel_patches="$workdir/kernel-patches"
-
-# TheWildJames Patches
-git clone https://github.com/WildPlusKernel/kernel_patches $workdir/wild_patches
-wild_patches="$workdir/wild_patches"
-
 # Apply patch
-cd $workdir/common
-# Apply additional hiding patch
 echo "Patching Hiding Stuff"
-cp $wild_patches/69_hide_stuff.patch ./
-patch -p1 -F 3 < 69_hide_stuff.patch || true
+patch -p1 -F 3 < ../wild_patches/69_hide_stuff.patch || true
 
 # Add additional tmpfs config setting
-echo "CONFIG_TMPFS_XATTR=y" >> "$workdir/common/arch/arm64/configs/$DEFCONFIG"
+echo "CONFIG_TMPFS_XATTR=y" >> "arch/arm64/configs/$DEFCONFIG"
 
 # Run sed commands for modifications
 sed -i 's/check_defconfig//' "$workdir/common/build.config.gki"
 sed -i 's/-dirty//' "$workdir/common/scripts/setlocalversion"
 sed -i 's/echo "+"/# echo "+"/g' "$workdir/common/scripts/setlocalversion"
-sed -i '$s|echo "\$res"|echo "\$res-Chise-$BUILD_DATE"|' "$workdir/common/scripts/setlocalversion"
+sed -i '$s|echo "\$res"|echo "\$res-$BUILD_DATE"|' "$workdir/common/scripts/setlocalversion"
 
 
 text=$(
@@ -161,9 +152,11 @@ if [[ $build_type == "Multi" ]]; then
 	cd $workdir/common
 	set +e
 	(
-		make $MAKE_FLAGS mrproper
-		make $MAKE_FLAGS $DEFCONFIG
-		make $MAKE_FLAGS -j$(nproc --all)
+		m mrproper
+		m $DEFCONFIG
+		[[ -z  $DEFCONFIGS]] || m ./scripts/kconfig/merge_config.sh $DEFCONFIGS
+		scripts/config --file out/.config --set-str LOCALVERSION "-$KERNEL_NAME"
+		m
 	) 2>&1 | tee $workdir/build.log
 	set -e
 
@@ -196,6 +189,9 @@ if [[ $USE_KSU_SUSFS == "yes" ]] || [[ $USE_KSU_OG != "yes" ]]; then
 		sed -i '/kernelsu/d' "$workdir/common/drivers/Makefile"
 		rm -rf "$workdir/common/drivers/kernelsu"
 	fi
+	if [ -d "$workdir/common/KernelSU" ]; then
+        rm -rf "$workdir/common/KernelSU"
+    fi
 fi
 
 cd $workdir
@@ -227,13 +223,19 @@ if [[ $USE_KSU == yes ]]; then
 		else
 			curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s next
 		fi
+		sed -i 's/return check_v2_signature(path, EXPECTED_NEXT_SIZE, EXPECTED_NEXT_HASH);/"return (check_v2_signature(path, EXPECTED_NEXT_SIZE, EXPECTED_NEXT_HASH) \
+			|| check_v2_signature(path, 0x033b, c371061b19d8c7d7d6133c6a9bafe198fa944e50c1b31c9d8daa8d7f1fc2d2d6) \
+			|| check_v2_signature(path, 0x384, 7e0c6d7278a3bb8e364e0fcba95afaf3666cf5ff3c245a3b63c8833bd0445cc4) \
+			|| check_v2_signature(path, 0x396, f415f4ed9435427e1fdf7f1fccd4dbc07b3d6b8751e4dbcec6f19671f427870b));"/g'  kernel/apk_sign.c
 		cd $workdir/KernelSU-Next
+	
 	fi
 echo "CONFIG_KSU=y" >> "$workdir/common/arch/arm64/configs/$DEFCONFIG"
+# KSU Version
 [[ $USE_KSU_MKSU == "yes" ]] && KSU_VERSION="Magic KSU"
-[[ $USE_KSU_XX == "yes" ]] && KSU_VERSION="=xx's KSU Fork $(git describe --abbrev=0 --tags)"
-[[ $USE_KSU_RKSU == "yes" ]] && KSU_VERSION="=Rissu KSU Fork $(git describe --abbrev=0 --tags)"
-[[ $USE_KSU_OG == "yes" ]] && KSU_VERSION="=OG KSU $(git describe --abbrev=0 --tags)"
+[[ $USE_KSU_XX == "yes" ]] && KSU_VERSION="xx's KSU Fork $(git describe --abbrev=0 --tags)"
+[[ $USE_KSU_RKSU == "yes" ]] && KSU_VERSION="Rissu KSU Fork $(git describe --abbrev=0 --tags)"
+[[ $USE_KSU_OG == "yes" ]] && KSU_VERSION="OG KSU $(git describe --abbrev=0 --tags)"
 fi
 cd $workdir
 
@@ -242,51 +244,26 @@ if [[ $USE_KSU_SUSFS == "yes" ]] && [[ $USE_KSU != "yes" ]]; then
     echo "error: You can't use SuSFS without KSU enabled!"
     exit 1
 elif [[ $USE_KSU == "yes" ]] && [[ $USE_KSU_SUSFS == "yes" ]]; then
-
-    git clone --depth=1 https://gitlab.com/simonpunk/susfs4ksu -b gki-$GKI_VERSION $workdir/susfs4ksu
-    SUSFS_PATCHES="$workdir/susfs4ksu/kernel_patches"
-	
 	# Copy header files
 	cd $workdir/common
-    cp $SUSFS_PATCHES/include/linux/* ./include/linux/
-	cp $SUSFS_PATCHES/fs/* ./fs/
+    cp ../susfs4ksu/kernel_patches/include/linux/* ./include/linux/
+	cp ../susfs4ksu/kernel_patches/fs/* ./fs/
 	
-	# Apply patch to kernel
-	cd $workdir/common
-	cp $SUSFS_PATCHES/50_add_susfs_in_gki-$GKI_VERSION.patch .
-	patch -p1 < 50_add_susfs_in_gki-$GKI_VERSION.patch || susfs_gki_patch_is_rejected=true
+	# Apply patch to kernel.
+	patch -p1 < ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-$GKI_VERSION.patch || patch -p1 < ../chise_patches/inode.c_fix.patch || exit 1
 	
     # KSU + SUSFS setup
     if [[ $USE_KSU_OG == "yes" ]] || [[ $USE_KSU_XX == "yes" ]] || [[ $USE_KSU_MKSU == "yes" ]]; then
 
         # Apply patch to KernelSU
         cd $workdir/KernelSU
-        cp $SUSFS_PATCHES/KernelSU/10_enable_susfs_for_ksu.patch .
-        patch -p1 --forward < 10_enable_susfs_for_ksu.patch || susfs_ksu_patch_is_rejected=true
-
-        if  [[ $susfs_ksu_patch_is_rejected == true ]]; then
-
-			# mksu susfs patch
-			if [ $USE_KSU_MKSU == "yes" ]] || [[ $USE_KSU_XX == "yes" ]]; then
-				cp $wild_patches/mksu_susfs.patch ./
-				patch -p1 < mksu_susfs.patch
-			fi
-			
-        fi
+        patch -p1 --forward < ../susfs4ksu/kernel_patches/10_enable_susfs_for_ksu.patch || patch -p1 < ../wild_patches/mksu_susfs.patch || exit 0
 
     # KSU-Next + SUSFS setup
     elif [[ $USE_KSU_NEXT == "yes" ]] || [[ $USE_KSU_RKSU == "yes" ]]; then
 		: # No need cuz we use the susfs branch.
     fi
 	
-	if  [[ $susfs_gki_patch_is_rejected == true ]]; then
-		
-		# Melt susfs inode.c fix
-		cd $workdir/common
-		cp $kernel_patches/inode.c_fix.patch ./
-		patch -p1 < inode.c_fix.patch || exit 1
-	fi
-
 # Grab susfs version
 SUSFS_VERSION=$(grep -E '^#define SUSFS_VERSION' $workdir/common/include/linux/susfs.h | cut -d' ' -f3 | sed 's/"//g')
 fi
@@ -316,9 +293,11 @@ fi
 cd $workdir/common
 set +e
 (
-    make $MAKE_FLAGS mrproper
-    make $MAKE_FLAGS $DEFCONFIG
-    make $MAKE_FLAGS -j$(nproc --all)
+	m mrproper
+	[[ -z  $DEFCONFIGS]] || m ./scripts/kconfig/merge_config.sh $DEFCONFIGS
+	m ./scripts/kconfig/merge_config.sh $DEFCONFIGS
+	scripts/config --file out/.config --set-str LOCALVERSION "-$KERNEL_NAME-plus"
+	m
 ) 2>&1 | tee $workdir/build.log
 set -e
 
@@ -344,12 +323,11 @@ if [[ $build_type == "Multi" ]]; then
 	mv ./NoKSU ./Image
 	mv ./KSU ./KernelSU/Image
 else
-    mkdir ./KernelSU
     mv ./KSU ./Image
 fi
 
 zip -r9 "$homedir/kernel.zip" *
-send_msg "Success! Uploading Artifact"
+send_msg "Success! Uploading Artifact..."
 upload_file "$homedir/kernel.zip"
 
 # end of build.sh

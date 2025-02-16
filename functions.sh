@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+
+function m() {
+    make -j27 ARCH=arm64 LLVM=1 LLVM_IAS=1 O=out CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_COMPAT=arm-linux-gnueabi- $@ || exit 0
+}
+
 upload_file() {
     local user_file="$1"
     local msg="$2"
