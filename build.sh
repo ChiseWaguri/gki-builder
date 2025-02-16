@@ -223,11 +223,11 @@ if [[ $USE_KSU == yes ]]; then
 		else
 			curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s next
 		fi
+		cd $workdir/KernelSU-Next
 		sed -i 's/return check_v2_signature(path, EXPECTED_NEXT_SIZE, EXPECTED_NEXT_HASH);/"return (check_v2_signature(path, EXPECTED_NEXT_SIZE, EXPECTED_NEXT_HASH) \
 			|| check_v2_signature(path, 0x033b, c371061b19d8c7d7d6133c6a9bafe198fa944e50c1b31c9d8daa8d7f1fc2d2d6) \
 			|| check_v2_signature(path, 0x384, 7e0c6d7278a3bb8e364e0fcba95afaf3666cf5ff3c245a3b63c8833bd0445cc4) \
-			|| check_v2_signature(path, 0x396, f415f4ed9435427e1fdf7f1fccd4dbc07b3d6b8751e4dbcec6f19671f427870b));"/g'  kernel/apk_sign.c
-		cd $workdir/KernelSU-Next
+			|| check_v2_signature(path, 0x396, f415f4ed9435427e1fdf7f1fccd4dbc07b3d6b8751e4dbcec6f19671f427870b));"/g'  kernel/apk_sign.c		
 	
 	fi
 echo "CONFIG_KSU=y" >> "$workdir/common/arch/arm64/configs/$DEFCONFIG"
