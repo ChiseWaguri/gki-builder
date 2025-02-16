@@ -155,7 +155,7 @@ if [[ $build_type == "Multi" ]]; then
 		m mrproper
 		m $DEFCONFIG
 		[[ ! -z $DEFCONFIGS ]] && m ./scripts/kconfig/merge_config.sh $DEFCONFIGS
-		scripts/config --file out/.config --set-str LOCALVERSION "-$KERNEL_NAME"
+		scripts/config --file $workdir/out/.config --set-str LOCALVERSION "-$KERNEL_NAME"
 		m
 	) 2>&1 | tee $workdir/build.log
 	set -e
@@ -295,8 +295,7 @@ set +e
 (
 	m mrproper
 	[[ ! -z $DEFCONFIGS ]] && m ./scripts/kconfig/merge_config.sh $DEFCONFIGS
-	m ./scripts/kconfig/merge_config.sh $DEFCONFIGS
-	scripts/config --file out/.config --set-str LOCALVERSION "-$KERNEL_NAME-plus"
+	scripts/config --file $workdir/out/.config --set-str LOCALVERSION "-$KERNEL_NAME-plus"
 	m
 ) 2>&1 | tee $workdir/build.log
 set -e
