@@ -236,7 +236,9 @@ echo "CONFIG_KSU=y" >> "$workdir/common/arch/arm64/configs/$DEFCONFIG"
 [[ $USE_KSU_MKSU == "yes" ]] && KSU_VERSION="Magic KSU"
 [[ $USE_KSU_XX == "yes" ]] && KSU_VERSION="xx's KSU Fork $(git describe --abbrev=0 --tags)"
 [[ $USE_KSU_RKSU == "yes" ]] && KSU_VERSION="Rissu KSU Fork $(git describe --abbrev=0 --tags)"
-[[ $USE_KSU_OG == "yes" ]] && KSU_VERSION="OG KSU $(git describe --abbrev=0 --tags)"
+[[ $USE_KSU_OG == "yes" ]] && KSU_VERSION="Official KSU $(git describe --abbrev=0 --tags)"
+[[ $USE_KSU_RKSU == "yes" ]] && KSU_VERSION="Rissu KSU Fork $(git describe --abbrev=0 --tags)"
+[[ $USE_KSU_NEXT == "yes" ]] && KSU_VERSION="KernelSU-Next $(git describe --abbrev=0 --tags)"
 fi
 cd $workdir
 
@@ -276,6 +278,7 @@ text=$(
     cat <<EOF
 *~~~ Compiling $KERNEL_NAME ~~~*
 *KernelSU*: \`$([[ $USE_KSU == "yes" ]] && echo "yes")$([[ $USE_KSU_NEXT == "yes" ]] && echo "KernelSU-Next" || echo "-")\`$([[ $USE_KSU == "yes" ]] || [[ $USE_KSU_NEXT == "yes" ]] && echo "
+*KernelSU*: \`$([[ $USE_KSU == "yes" ]] && echo "yes")\`$([[ $USE_KSU == "yes" ]] || [[ $USE_KSU_NEXT == "yes" ]] && echo "
 *KSU Version*: \`$KSU_VERSION\`")
 $([[ $USE_KSU == "yes" ]] || [[ $USE_KSU_NEXT == "yes" ]] && echo "*SUSFS*: \`$([[ $USE_KSU_SUSFS == "yes" ]] && echo "true" || echo "false")\`$([[ $USE_KSU_SUSFS == "yes" ]] && echo "
 *SUSFS Version*: \`$SUSFS_VERSION\`")")
