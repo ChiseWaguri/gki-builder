@@ -13,8 +13,8 @@ export ANYKERNEL_REPO="https://github.com/ChiseWaguri/Anykernel3"
 export ANYKERNEL_BRANCH="gki"
 
 # Kernel
-export KERNEL_REPO="https://github.com/pzqqt/android_kernel_xiaomi_marble"
-export KERNEL_BRANCH="melt-rebase"
+export KERNEL_REPO="https://github.com/Laulan56/android_kernel_xiaomi_marble"
+export KERNEL_BRANCH="android14"
 export KERNEL_IMAGE="$workdir/out/arch/arm64/boot/Image"
 # If you want to revert kernel repo to a specific commit hash/ or tag for some purposes
 export KERNEL_DEPTH=1 # depth needed to revert to the commit hash, set it to 1 if you're not reverting kernel repo commit
