@@ -294,6 +294,7 @@ cd $workdir/common
 set +e
 (
 	m mrproper
+	m $DEFCONFIG
 	[[ ! -z $DEFCONFIGS ]] && m ./scripts/kconfig/merge_config.sh $DEFCONFIGS
 	scripts/config --file $workdir/out/.config --set-str LOCALVERSION "-$KERNEL_NAME-plus"
 	m
