@@ -278,7 +278,7 @@ text=$(
     cat <<EOF
 *~~~ Compiling $KERNEL_NAME ~~~*
 *KernelSU*: \`$([[ $USE_KSU == "yes" ]] && echo "yes")$([[ $USE_KSU_NEXT == "yes" ]] && echo "KernelSU-Next" || echo "-")\`$([[ $USE_KSU == "yes" ]] || [[ $USE_KSU_NEXT == "yes" ]] && echo "
-*KernelSU*: \`$([[ $USE_KSU == "yes" ]] && echo "yes")\`$([[ $USE_KSU == "yes" ]] || [[ $USE_KSU_NEXT == "yes" ]] && echo "
+*KernelSU*: \`$([[ $USE_KSU == "yes" ]] && echo "true")\`$([[ $USE_KSU == "yes" ]] echo "
 *KSU Version*: \`$KSU_VERSION\`")
 $([[ $USE_KSU == "yes" ]] || [[ $USE_KSU_NEXT == "yes" ]] && echo "*SUSFS*: \`$([[ $USE_KSU_SUSFS == "yes" ]] && echo "true" || echo "false")\`$([[ $USE_KSU_SUSFS == "yes" ]] && echo "
 *SUSFS Version*: \`$SUSFS_VERSION\`")")
