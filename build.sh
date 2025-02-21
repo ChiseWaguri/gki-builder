@@ -68,13 +68,16 @@ install_ksu() {
     }
 
     if [[ $# -eq 0 ]]; then
-        echo "Usage: installksu <repo-username/ksu-repo-name> <commit-or-tag>"
-        echo "Usage: installksu <repo-username/ksu-repo-name> (no args): Sets up the latest tagged version."
+        echo "Usage: installksu <repo-username/ksu-repo-name> [commit-or-tag]"
+        echo ""
+        echo "Examples:"
+        echo "  installksu tiann/KernelSU        # Installs the latest tagged version"
+        echo "  installksu tiann/KernelSU v1.0.3 # Installs a specific commit or tag"
         return 1
     elif [[ -z $2 ]]; then
-        local ksu_branch=$(gh api repos/$1 --jq '.default_branch')
-        local ksu_setup_url=https://raw.githubusercontent.com/$1/refs/heads/$ksu_branch/kernel/setup.sh
-        setup_ksu $ksu_setup_url
+        local ksu_tags=$(gh api repos/$1/tags --jq '.[0].name')
+        local ksu_setup_url=https://raw.githubusercontent.com/$1/refs/tags/$ksu_tags/kernel/setup.sh
+        setup_ksu $ksu_setup_url $ksu_tags
     else
         local ksu_setup_url=https://raw.githubusercontent.com/$1/refs/heads/$2/kernel/setup.sh
         setup_ksu $ksu_setup_url $2
