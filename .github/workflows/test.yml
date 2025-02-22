@@ -81,6 +81,13 @@ on:
       default: false
       type: boolean
 
+env:
+    CHAT_ID: ${{ secrets.CHAT_ID }}
+    TOKEN: ${{ secrets.TOKEN }}
+    GH_TOKEN: ${{ secrets.GH_TOKEN }}
+    STATUS: "BETA"
+    BUILD_KERNEL: "true"
+
 jobs:
   build:
     name: Build GKI
@@ -111,22 +118,16 @@ jobs:
           kernel-${{ github.ref_name }}-
           kernel-
 
-    - name: clang cache
+    - name: toolchain cache
       uses: actions/cache@v3
       with:
-        path: android-kernel/clang
-        key: clang-${{ github.ref_name }}-${{ github.run_id }}
+        path: android-kernel/tc
+        key: tc-${{ github.ref_name }}
         restore-keys: |
-          clang-${{ github.ref_name }}-
-          clang-
+          tc-${{ github.ref_name }}
+          tc-
 
     - name: Build
-      env:
-        CHAT_ID: ${{ secrets.CHAT_ID }}
-        TOKEN: ${{ secrets.TOKEN }}
-        GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        STATUS: "BETA"
-        BUILD_KERNEL: "true"
       run: |
        chmod a+x *.sh
 
@@ -134,15 +135,10 @@ jobs:
             export USE_KSU="true"
        fi
 
-       # KSU Manual hook
        if [[ "${{ inputs.KSU_MANUAL_HOOK }}" == "true" ]]; then
             sed -i 's/KSU_USE_MANUAL_HOOK=.*/KSU_USE_MANUAL_HOOK=true/g' config.sh
        else
             sed -i 's/KSU_USE_MANUAL_HOOK=.*/KSU_USE_MANUAL_HOOK=false/g' config.sh
-       fi
-
-       if [[ "${{ inputs.SUSFS4KSU }}" == "true" ]]; then
-            export USE_KSU_SUSFS="true"
        fi
 
        if [[ "${{ inputs.KernelSU }}" == "Official KernelSU" ]]; then
@@ -151,10 +147,6 @@ jobs:
             export USE_KSU_NEXT="true"
        elif [[ "${{ inputs.KernelSU }}" == "Rissu KernelSU Fork" ]]; then
             export USE_KSU_RKSU="true"
-       fi
-
-       if [[ "${{ inputs.BUILD_LKMS }}" == "true" ]]; then
-            export BUILD_LKMS="true"
        fi
 
        if [[ "${{ inputs.Clang }}" == "AOSP Clang" ]]; then
@@ -167,15 +159,11 @@ jobs:
             : # follow config.sh
        fi
 
-       if [[ "${{ inputs.BUILD_BOOTIMG }}" == "true" ]]; then
-            export BUILD_BOOTIMG="true"
-       fi
+       export USE_KSU_SUSFS="${{ inputs.SUSFS4KSU }}"
+       export BUILD_LKMS="${{ inputs.BUILD_LKMS }}"
+       export BUILD_BOOTIMG="${{ inputs.BUILD_BOOTIMG }}"
+       export UPLOAD2GH="${{ inputs.UPLOAD2GH }}"
 
-       if [[ "${{ inputs.UPLOAD2GH }}" == "true" ]]; then
-            export UPLOAD2GH="true"
-       fi
-
-       export PATH="/usr/lib/ccache:$PATH"
        ./build.sh
 
     - name: Upload kernel zip
@@ -205,3 +193,12 @@ jobs:
       with:
         name: boot-raw-${{ github.run_number }}
         path: "./*-raw.img"
+
+    - name: Delete unused caches
+      run: |
+        y=$(gh cache list | grep -E 'clang|kernel' | awk '{print $1}')
+        if [[ -n $y ]]; then
+        for i in $y; do
+          gh cache delete $i
+        done
+        fi
