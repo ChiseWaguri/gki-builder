@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Kernel name
-KERNEL_NAME="QuartiX"
+KERNEL_NAME="LOS_KSU"
 
 # GKI Version
 GKI_VERSION="android12-5.10"
@@ -17,8 +17,8 @@ ANYKERNEL_REPO="https://github.com/hazepynut/anykernel"
 ANYKERNEL_BRANCH="gki"
 
 # Kernel
-KERNEL_REPO="https://github.com/hazepynut/kernel_new"
-KERNEL_BRANCH="android12-5.10"
+KERNEL_REPO="https://github.com/cupid-development/android_kernel_xiaomi_sm8450"
+KERNEL_BRANCH="lineage-22.1"
 KERNEL_DEFCONFIG="gki_defconfig"
 # Defconfigs would be merged in the compiling processes
 DEFCONFIGS_EXAMPLE="
@@ -26,6 +26,9 @@ vendor/xiaomi.config
 vendor/gold.config
 "
 DEFCONFIGS="
+vendor/waipio_GKI.config
+vendor/xiaomi_GKI.config
+vendor/debugfs.config
 " # Leave this empty if you don't need to merge any configs
 
 # Manual Hook

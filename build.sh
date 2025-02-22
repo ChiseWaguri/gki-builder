@@ -281,7 +281,7 @@ fi
 if grep -q 'echo "+"' scripts/setlocalversion; then
     sed -i 's/echo "+"/# echo "+"/g' scripts/setlocalversion
 fi
-# sed -i '$s|echo "\$res"|echo "\$res-v3.6.1-Chise-$BUILD_DATE+"|' scripts/setlocalversion
+sed -i '$s|echo "\$res"|echo "\$res-LOS-Chise-$BUILD_DATE+"|' scripts/setlocalversion
 
 text=$(
     cat << EOF
