@@ -220,7 +220,7 @@ cd $workdir
 if [[ $USE_KSU == true ]]; then
     [[ $USE_KSU_OFC == true ]] && install_ksu tiann/KernelSU
     [[ $USE_KSU_RKSU == true ]] && install_ksu rsuntk/KernelSU $([[ $USE_KSU_SUSFS == true ]] && echo "susfs-v1.5.5-new")
-    [[ $USE_KSU_NEXT == true ]] && install_ksu rifsxd/KernelSU-Next $([[ $USE_KSU_SUSFS == true ]] && echo "next-susfs")
+    [[ $USE_KSU_NEXT == true ]] && install_ksu rifsxd/KernelSU-Next next
 fi
 
 # SUSFS for KSU setup
@@ -244,6 +244,9 @@ elif [[ $USE_KSU == "true" ]] && [[ $USE_KSU_SUSFS == "true" ]]; then
     if [[ $USE_KSU_OFC == "true" ]]; then
         cd ../KernelSU
         patch -p1 < $SUSFS_PATCHES/KernelSU/10_enable_susfs_for_ksu.patch || exit 1
+    elif [[ $USE_KSU_NEXT == "true" ]]; then
+        cd ../KernelSU-Next
+        patch -p1 < $workdir/chise_patches/ksu-next_susfs-v1.5.5.patch || exit 1
     fi
 fi
 
