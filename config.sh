@@ -29,6 +29,7 @@ DEFCONFIGS="
 vendor/waipio_GKI.config
 vendor/xiaomi_GKI.config
 vendor/debugfs.config
+vendor/marble_GKI.config
 " # Leave this empty if you don't need to merge any configs
 
 # Manual Hook
