@@ -162,11 +162,20 @@ setup_clang() {
 setup_clang
 
 # Clone binutils if they don't exist
-if ! echo clang/bin/* | grep -q 'aarch64-linux-gnu'; then
-    git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gas/linux-x86 -b main binutils
-    export PATH="$(pwd)/clang/bin:$(pwd)/binutils:$PATH"
+# Check if aarch64-linux-gnu exists in clang/bin/
+if [[ ! -f clang/bin/aarch64-linux-gnu-* ]]; then
+    echo "🔍 aarch64-linux-gnu not found. Cloning binutils..."
+    
+    if git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gas/linux-x86 binutils; then
+        export PATH="$(pwd)/clang/bin:$(pwd)/binutils:$PATH"
+        echo "✅ Binutils cloned and PATH updated."
+    else
+        echo "❌ Failed to clone binutils."
+        exit 1
+    fi
 else
     export PATH="$(pwd)/clang/bin:$PATH"
+    echo "✅ aarch64-linux-gnu found. Using existing setup."
 fi
 
 # Extract clang version
@@ -303,10 +312,11 @@ if [[ $BUILD_KERNEL == "true" ]]; then
 
         # Build Kernel Image(s)
         build_targets="Image"
-        if [[ $STATUS != "STABLE" || $BUILD_BOOTIMG == "true" ]]; then
+        if [[ $STATUS == "STABLE" || $BUILD_BOOTIMG == "true" ]]; then
             build_targets+=" Image.lz4 Image.gz"
         fi
-        make "$MAKE_ARGS" -j"$(nproc --all)" $build_targets
+        make $MAKE_ARGS -j$(nproc --all) \
+            $build_targets
 
     } 2>&1 | tee "$workdir/build.log"
     set -e
@@ -319,14 +329,15 @@ elif [[ $GENERATE_DEFCONFIG == "true" ]]; then
 fi
 
 cd ..
-if ! [[ -f $KERNEL_IMAGE ]]; then
+if [[ ! -f $KERNEL_IMAGE ]]; then
     send_msg "❌ Build failed!"
+    # Upload log and config for debugging
     upload_file "build.log"
     upload_file "out/.config"
     exit 1
 fi
 
-# After-compiling stuff
+# Post-compiling stuff
 cd $workdir
 # Clone AnyKernel
 git clone --depth=1 "$ANYKERNEL_REPO" -b "$ANYKERNEL_BRANCH" anykernel
