@@ -161,22 +161,34 @@ else
     CLANG_INFO="$CLANG_URL | $CUSTOM_CLANG_BRANCH"
 fi
 
-# Check Clang cache
-CLANG_PATH="$workdir/tc"
-if [[ ! -d "$CLANG_PATH/bin" || ! -f "$CLANG_PATH/VERSION" || "$(cat "$CLANG_PATH/VERSION")" != "$CLANG_INFO" ]]; then
+# Check if Clang is already installed
+if [[ ! -x $CLANG_PATH/bin/clang || ! -f $CLANG_PATH/VERSION || "$(cat $CLANG_PATH/VERSION)" != "$CLANG_INFO" ]]; then
     echo "🔽 Downloading Clang from $CLANG_INFO..."
-    rm -rf "$CLANG_PATH" && mkdir -p "$CLANG_PATH"
+    
+    # Remove old Clang directory safely
+    rm -rf $CLANG_PATH && mkdir -p $CLANG_PATH || { echo "❌ Failed to prepare Clang directory!"; exit 1; }
 
-    if [[ "$USE_AOSP_CLANG" == "true" || "$CLANG_URL" == *.tar.* ]]; then
-        wget -qO clang-tarball "$CLANG_URL" && tar -xf clang-tarball -C "$CLANG_PATH/" && rm clang-tarball
+    # Download or clone Clang
+    if [[ "$CLANG_URL" == *.tar.* ]]; then
+        if wget -qO clang-tarball $CLANG_URL; then
+            tar -xf clang-tarball -C $CLANG_PATH/ && rm clang-tarball
+        else
+            echo "❌ Failed to download Clang from $CLANG_URL!"
+            exit 1
+        fi
     else
-        git clone --depth=1 --branch "$CUSTOM_CLANG_BRANCH" "$CLANG_URL" "$CLANG_PATH"
+        if ! git clone --depth=1 --branch $CUSTOM_CLANG_BRANCH $CLANG_URL $CLANG_PATH; then
+            echo "❌ Failed to clone Clang from $CLANG_URL!"
+            exit 1
+        fi
     fi
 
-    echo "$CLANG_INFO" > "$CLANG_PATH/VERSION"
+    # Store Clang info
+    echo "$CLANG_INFO" > $CLANG_PATH/VERSION
 else
     echo "✅ Using cached Clang: $CLANG_INFO."
 fi
+
 
 # Set Clang as compiler
 export CC="ccache clang"
@@ -188,7 +200,7 @@ export HOSTCXX="$CXX"
 export PATH="$CLANG_PATH/bin:/usr/lib/ccache:$PATH"
 
 # Ensure binutils (aarch64-linux-gnu) is available
-if find "$CLANG_PATH/bin" -name "aarch64-linux-gnu-*" | grep -q .; then
+if find "$CLANG_PATH" -name "aarch64-linux-gnu-*" | grep -q .; then
     echo "✅ aarch64-linux-gnu found. No need to clone binutils."
 else
     echo "🔍 aarch64-linux-gnu not found. Cloning binutils..."
