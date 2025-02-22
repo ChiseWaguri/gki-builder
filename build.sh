@@ -292,7 +292,7 @@ if [[ $BUILD_KERNEL == "true" ]]; then
     set +e
     {
         # Run defconfig
-        make "$MAKE_ARGS" "$KERNEL_DEFCONFIG"
+        make $MAKE_ARGS $KERNEL_DEFCONFIG
 
         # Disable module builds if needed
         if [[ $BUILD_LKMS != "true" ]]; then
@@ -303,12 +303,12 @@ if [[ $BUILD_KERNEL == "true" ]]; then
         if [[ -n "$DEFCONFIGS" ]]; then
             for CONFIG in $DEFCONFIGS; do
                 echo "Merging $CONFIG..."
-                make "$MAKE_ARGS" scripts/kconfig/merge_config.sh "$CONFIG"
+                make $MAKE_ARGS scripts/kconfig/merge_config.sh $CONFIG
             done
         fi
 
         # Ensure configuration is valid
-        make "$MAKE_ARGS" olddefconfig
+        make $MAKE_ARGS olddefconfig
 
         # Build Kernel Image(s)
         build_targets="Image"
@@ -322,9 +322,9 @@ if [[ $BUILD_KERNEL == "true" ]]; then
     set -e
 
 elif [[ $GENERATE_DEFCONFIG == "true" ]]; then
-    make "$MAKE_ARGS" "$KERNEL_DEFCONFIG"
-    mv "$workdir/out/.config" "$workdir/config"
-    send_msg "$(curl -s bashupload.com -T "$workdir/config")"
+    make $MAKE_ARGS $KERNEL_DEFCONFIG
+    mv $workdir/out/.config $workdir/config
+    send_msg $(curl -s bashupload.com -T $workdir/config)
     exit 0
 fi
 
