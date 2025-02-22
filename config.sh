@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
 # Kernel name
-KERNEL_NAME="QuartiX"
+KERNEL_NAME="Melt"
 
 # GKI Version
 GKI_VERSION="android12-5.10"
 
 # Build variables
-export TZ="Asia/Makassar"
+export TZ="Asia/Jakarta"
 export KBUILD_BUILD_USER="eraselk"
 export KBUILD_BUILD_HOST="$KERNEL_NAME"
 export KBUILD_BUILD_TIMESTAMP=$(date)
@@ -17,9 +17,9 @@ ANYKERNEL_REPO="https://github.com/hazepynut/anykernel"
 ANYKERNEL_BRANCH="gki"
 
 # Kernel
-KERNEL_REPO="https://github.com/hazepynut/kernel_new"
-KERNEL_BRANCH="android12-5.10"
-KERNEL_DEFCONFIG="gki_defconfig"
+KERNEL_REPO="https://github.com/ChiseWaguri/android_kernel_xiaomi_marble"
+KERNEL_BRANCH="syscall-hook"
+KERNEL_DEFCONFIG="marble_defconfig"
 # Defconfigs would be merged in the compiling processes
 DEFCONFIGS_EXAMPLE="
 vendor/xiaomi.config
