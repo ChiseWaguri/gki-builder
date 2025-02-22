@@ -162,6 +162,7 @@ else
 fi
 
 # Check if Clang is already installed
+CLANG_PATH="$workdir/tc"
 if [[ ! -x $CLANG_PATH/bin/clang || ! -f $CLANG_PATH/VERSION || "$(cat $CLANG_PATH/VERSION)" != "$CLANG_INFO" ]]; then
     echo "🔽 Downloading Clang from $CLANG_INFO..."
     
