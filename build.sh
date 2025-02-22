@@ -218,18 +218,20 @@ config --file arch/arm64/configs/$KERNEL_DEFCONFIG --enable CONFIG_TMPFS_POSIX_A
 # KernelSU setup
 # Remove KernelSU in driver in kernel source if exist
 cd $workdir/common
-if [ -d drivers/staging/kernelsu ]; then
-    sed -i '/kernelsu/d' drivers/staging/Kconfig
-    sed -i '/kernelsu/d' drivers/staging/Makefile
-    rm -rf drivers/staging/kernelsu
-fi
-if [ -d drivers/kernelsu ]; then
-    sed -i '/kernelsu/d' drivers/Kconfig
-    sed -i '/kernelsu/d' drivers/Makefile
-    rm -rf drivers/kernelsu
-fi
-if [ -d KernelSU ]; then
-    rm -rf KernelSU
+if [[ $USE_KSU == true ]]; then
+    if [ -d drivers/staging/kernelsu ]; then
+        sed -i '/kernelsu/d' drivers/staging/Kconfig
+        sed -i '/kernelsu/d' drivers/staging/Makefile
+        rm -rf drivers/staging/kernelsu
+    fi
+    if [ -d drivers/kernelsu ]; then
+        sed -i '/kernelsu/d' drivers/Kconfig
+        sed -i '/kernelsu/d' drivers/Makefile
+        rm -rf drivers/kernelsu
+    fi
+    if [ -d KernelSU ]; then
+        rm -rf KernelSU
+    fi
 fi
 
 # Apply config for KernelSU manual hook (Need supported source on both kernel and KernelSU)
