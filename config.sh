@@ -18,7 +18,7 @@ ANYKERNEL_BRANCH="gki"
 
 # Kernel
 KERNEL_REPO="https://github.com/ChiseWaguri/android_kernel_xiaomi_marble"
-KERNEL_BRANCH="syscall-hook"
+KERNEL_BRANCH="syscall"
 KERNEL_DEFCONFIG="marble_defconfig"
 # Defconfigs would be merged in the compiling processes
 DEFCONFIGS_EXAMPLE="
