@@ -199,7 +199,7 @@ jobs:
 
     - name: Delete unused caches
       run: |
-        y=$(gh cache list | grep -E 'clang|tc' | awk '{print $1}')
+        y=$(gh cache list | grep -E 'clang|kernel' | awk '{print $1}')
         if [[ -n $y ]]; then
         for i in $y; do
           gh cache delete $i

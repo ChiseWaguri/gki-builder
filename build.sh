@@ -251,7 +251,7 @@ fi
 cd $workdir
 if [[ $USE_KSU == true ]]; then
     [[ $USE_KSU_OFC == true ]] && install_ksu tiann/KernelSU
-    [[ $USE_KSU_RKSU == true ]] && install_ksu rsuntk/KernelSU $([[ $USE_KSU_SUSFS == true ]] && echo "susfs-v1.5.5-new" || echo "main")
+    [[ $USE_KSU_RKSU == true ]] && install_ksu rsuntk/KernelSU $([[ $USE_KSU_SUSFS == true ]] && echo "susfs-v1.5.5-new")
     [[ $USE_KSU_NEXT == true ]] && install_ksu rifsxd/KernelSU-Next next
     [[ $USE_KSU_XX == true ]] && install_ksu backslashxx/KernelSU 12055-sus155
 fi
