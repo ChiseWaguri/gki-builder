@@ -45,6 +45,7 @@ on:
       - 'Official KernelSU'
       - 'KernelSU-Next'
       - 'Rissu KernelSU Fork'
+      - "xx's KernelSU Fork"
 
     SUSFS4KSU:
       description: 'SUSFS4KSU (KSU needed!)'
@@ -147,6 +148,8 @@ jobs:
             export USE_KSU_NEXT="true"
        elif [[ "${{ inputs.KernelSU }}" == "Rissu KernelSU Fork" ]]; then
             export USE_KSU_RKSU="true"
+       elif [[ "${{ inputs.KernelSU }}" == "xx's KernelSU Fork" ]]; then
+            export USE_KSU_XX="true"
        fi
 
        if [[ "${{ inputs.Clang }}" == "AOSP Clang" ]]; then
