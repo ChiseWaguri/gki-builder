@@ -247,11 +247,6 @@ if [[ $USE_KSU == true ]]; then
     fi
 fi
 
-# Apply config for KernelSU manual hook (Need supported source on both kernel and KernelSU)
-if [[ $KSU_USE_MANUAL_HOOK == "true" ]]; then
-    config --file arch/arm64/configs/$KERNEL_DEFCONFIG --enable CONFIG_KSU_MANUAL_HOOK
-fi
-
 # Install KernelSU driver
 cd $workdir
 if [[ $USE_KSU == true ]]; then
@@ -288,8 +283,14 @@ elif [[ $USE_KSU == "true" ]] && [[ $USE_KSU_SUSFS == "true" ]]; then
     fi
 fi
 
-# Remove unnecessary code from scripts/setlocalversion
 cd $workdir/common
+# Apply config for KernelSU manual hook (Need supported source on both kernel and KernelSU)
+if [[ $KSU_USE_MANUAL_HOOK == "true" ]]; then
+    config --file arch/arm64/configs/$KERNEL_DEFCONFIG --enable CONFIG_KSU_MANUAL_HOOK
+    config --file arch/arm64/configs/$KERNEL_DEFCONFIG --disable CONFIG_KSU_SUSFS_SUS_SU
+fi
+
+# Remove unnecessary code from scripts/setlocalversion
 if grep -q '[-]dirty' scripts/setlocalversion; then
     sed -i 's/-dirty//' scripts/setlocalversion
 fi
