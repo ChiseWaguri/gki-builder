@@ -529,7 +529,7 @@ fi
 if [[ $BUILD_LKMS == "true" ]]; then
     mkdir lkm && cd lkm
     find "$workdir/out" -type f -name "*.ko" -exec cp {} . \; || true
-    [[ -n "$(ls -A ./*.ko 2>/dev/null)" ]] && zip -r9 "$workdir/artifacts/lkm-$KERNEL_VERSION-$BUILD_DATE.zip" ./*.ko || log "No LKMs found."
+    [[ -n "$(ls -A ./*.ko 2>/dev/null)" ]] && zip -r9 "$workdir/artifacts/lkm-$KERNEL_VERSION.zip" ./*.ko || log "No LKMs found."
     cd ..
 fi
 
