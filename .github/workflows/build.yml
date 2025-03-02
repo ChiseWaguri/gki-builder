@@ -160,7 +160,7 @@ jobs:
           export PATH="/usr/lib/ccache:$PATH"
           ./build.sh
 
-      - name: Upload Artifact
+      - name: Upload Artifact (AK3 and Images)
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BASE_NAME }}-${{ github.run_number }}
@@ -168,6 +168,13 @@ jobs:
           path: |
             artifacts/*.zip
             artifacts/*.img
+
+      - name: Upload Artifact (Info file)
+        uses: actions/upload-artifact@v4
+        with:
+          name: info-${{ github.run_number }}
+          retention-days: 1
+          path: |
             artifacts/*.txt
 
       - name: Save Toolchain Cache

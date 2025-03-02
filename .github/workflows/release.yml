@@ -65,8 +65,8 @@ jobs:
           while IFS='=' read -r key value; do
             echo "$key=$value" # for debugging
             echo "$key=$value" >> $GITHUB_ENV
-          done < release_files/info.txt
-          rm -f release_files/info.txt
+          done < release_files/info-${{ github.run_number }}/info.txt
+          rm -f release_files/info-${{ github.run_number }}/info.txt
 
       - name: Upload All Builds to GKI Release Repo
         uses: softprops/action-gh-release@v2
