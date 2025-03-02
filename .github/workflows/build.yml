@@ -75,7 +75,7 @@ jobs:
     steps:
       - name: Set STATUS Based on Trigger Type
         run: |
-          if [[ ${{ toJson(github.event.inputs) }} == "null" ]]; then
+          if [[ "${{ toJson(github.event.inputs) }}" == "null" ]]; then
             echo "STATUS=BETA" >> $GITHUB_ENV
           else
             echo "STATUS=STABLE" >> $GITHUB_ENV
