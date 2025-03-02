@@ -73,18 +73,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Set STATUS Based on Trigger Type
+      - name: Set ENV variable based on event
         run: |
-          if [[ "${{ toJson(github.event.inputs) }}" == '{}' ]]; then
-            echo "STATUS=STABLE" >> $GITHUB_ENV
-          else
-            echo "STATUS=BETA" >> $GITHUB_ENV
-          fi
+          case "${{ github.event_name }}" in
+            workflow_dispatch)
+              echo "STATUS=BETA" >> $GITHUB_ENV
+              ;;
+            workflow_call)
+              echo "STATUS=RELEASE" >> $GITHUB_ENV
+              ;;
+            *)
+              echo "STATUS=UNKNOWN" >> $GITHUB_ENV
+              ;;
+          esac
 
-
-      - name: Display STATUS
-        run: |
-            echo "STATUS: $STATUS"
+      - name: Verify STATUS
+        run: echo "Triggered by ${{ github.event_name }}, STATUS is set to $STATUS
 
       - name: Checkout
         uses: actions/checkout@v4
