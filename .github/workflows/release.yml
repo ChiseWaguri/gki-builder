@@ -74,6 +74,7 @@ jobs:
           repository: ${{ env.REL_REPO }}
           name: ${{ env.RELEASE_NAME }}
           tag_name: v${{ env.KVER }}-${{ github.run_id }}
+          prerelease: true
           files: release_files/**/*
           body: |
             ### 📢 GKI Kernel Release
@@ -81,12 +82,12 @@ jobs:
             - KSU Next `${{ env.KSU_NEXT_VER }}`
             - KSU OG `${{ env.KSU_OFC_VER }}`
             - SUSFS ඞ `${{ env.SUSFS_VER }}`
-          
-            #### Build Details:
+
+            #### Build Details
             [GKI Builder](${{ env.BUILDER_REPO }})
             - Last Commit: [here](${{ env.BUILDER_LAST_COMMIT }})
             - Branch: `${{ env.BUILDER_CUR_BRANCH }}`
-          
+
             [Kernel Source](${{ env.KERNEL_REPO }})
             - Last Commit: [here](${{ env.KERNEL_LAST_COMMIT }})
       env:
