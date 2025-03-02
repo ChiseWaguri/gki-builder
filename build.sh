@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 workdir=$(pwd)
-exec > >($workdir/build.log) 2>&1
+exec > >(tee $workdir/build.log) 2>&1
 
 # Check for required variables
 set -e
