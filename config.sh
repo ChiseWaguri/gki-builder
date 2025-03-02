@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 
 # Kernel name
-KERNEL_NAME="QuartiX-v2"
+KERNEL_NAME="los22.1+"
 
 # GKI Version
 GKI_VERSION="android12-5.10"
 
 # Build variables
-export TZ="Asia/Makassar"
-export KBUILD_BUILD_USER="eraselk"
-export KBUILD_BUILD_HOST="$KERNEL_NAME"
+export TZ="Asia/Jakarta"
+export KBUILD_BUILD_USER="chisewaguri"
+# export KBUILD_BUILD_HOST="$KERNEL_NAME"
 export KBUILD_BUILD_TIMESTAMP=$(date)
 
 # AnyKernel variables
@@ -17,7 +17,7 @@ ANYKERNEL_REPO="https://github.com/hazepynut/anykernel"
 ANYKERNEL_BRANCH="gki"
 
 # Kernel
-KERNEL_REPO="https://github.com/chisewaguri/android_kernel_xiaomi_sm8450"
+KERNEL_REPO="https://github.com/cupid-development/android_kernel_xiaomi_sm8450"
 KERNEL_BRANCH="lineage-22.1"
 KERNEL_DEFCONFIG="gki_defconfig"
 DEFCONFIG_FILE="$workdir/common/arch/arm64/configs/$KERNEL_DEFCONFIG"
