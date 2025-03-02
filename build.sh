@@ -533,7 +533,7 @@ if [[ $BUILD_LKMS == "true" ]]; then
     cd ..
 fi
 
-echo "BASE_NAME=$KERNEL_NAME-$VARIANT" >> $GITHUB_ENV
+echo "BASE_NAME=$KERNEL_NAME-$VARIANT" >>$GITHUB_ENV
 
 if [[ $LAST_BUILD == "true" ]]; then
     (
@@ -550,9 +550,9 @@ if [[ $LAST_BUILD == "true" ]]; then
         cd $workdir/common
         echo "LAST_COMMIT_KERNEL=$(git remote get-url origin)/commit/$(git log -1 --format="%H")"
         cd $workdir
-    ) >> $workdir/artifacts/info.txt
+    ) >>$workdir/artifacts/info.txt
 fi
-        
+
 if [[ $STATUS == "BETA" ]]; then
     send_msg "✅ Build Succeeded"
     send_msg "📦 [Download]($NIGHTLY_LINK)"
