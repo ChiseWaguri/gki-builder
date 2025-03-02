@@ -63,7 +63,7 @@ jobs:
         with:
           repository: ${{ env.REL_REPO }}
           name: ${{ env.RELEASE_NAME }}
-          tag_name: {{ github.run_id }}
+          tag_name: ${{ github.run_id }}
           prerelease: true
           files: release_files/**/*
           body: |
