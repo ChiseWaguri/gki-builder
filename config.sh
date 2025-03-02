@@ -34,15 +34,15 @@ DEFCONFIGS="
 GKI_RELEASES_REPO="https://github.com/hazepynut/quartix-releases"
 
 # AOSP Clang
-USE_AOSP_CLANG="false"
+USE_AOSP_CLANG="true"
 AOSP_CLANG_VERSION="r547379"
 
 # Custom clang
-USE_CUSTOM_CLANG="true"
+USE_CUSTOM_CLANG="false"
 CUSTOM_CLANG_SOURCE="https://gitlab.com/rvproject27/RvClang"
 CUSTOM_CLANG_BRANCH="release/19.x"
 
 # Zip name
-BUILD_DATE=$(date -d "$KBUILD_BUILD_TIMESTAMP" +"%y%m%d%H%M")
+BUILD_DATE=$(date -d "$KBUILD_BUILD_TIMESTAMP" +"%Y.%m.%d-%H%M")
 ZIP_NAME="$KERNEL_NAME-KVER-VARIANT.zip"
 # Note: KVER and VARIANT are placeholder and they will be changed in the build.sh script.

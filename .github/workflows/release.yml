@@ -42,6 +42,7 @@ jobs:
       UPLOAD2GH: "true"
       BUILD_LKMS: "false"
       KSU_MANUAL_HOOK: "true"
+      LAST_BUILD: "true"
 
   release:
     name: Create Unified Release
@@ -59,57 +60,33 @@ jobs:
       - name: List Downloaded Files
         run: ls -R release_files
 
-      - name: Extract GKI_RELEASES_REPO from config.sh
+      - name: Extract variables from info.txt
         run: |
-          GKI_RELEASES_REPO=$(grep -E '^GKI_RELEASES_REPO=' config.sh | cut -d '=' -f2 | tr -d '"')
-          RELEASE_REPO=$(echo "$GKI_RELEASES_REPO" | sed 's|https://github.com/||')
-          echo "Extracted repo: $RELEASE_REPO"
-          echo "RELEASE_REPO=$RELEASE_REPO" >> $GITHUB_ENV
-
-      - name: Set up timezone
-        run: |
-          TZ=$(grep -E '^(export )?TZ=' config.sh | cut -d '=' -f2- | tr -d '"')
-
-          # Setting timezone...
-          if [[ -n "$TZ" ]]; then
-            echo "Setting timezone to: $TZ"
-            sudo timedatectl set-timezone "$TZ"
-          else
-            echo "⚠️ TZ not found in config.sh. Skipping timezone update."
-          fi
-
-      - name: Find Latest Build ZIP and Extract Info
-        run: |
-          ## Grab Release Tag and Kernel Name
-
-          # Generate build date
-          BUILD_DATE=$(date +"%y.%m.%d-%H%M")
-
-          # Find the smallest ZIP filename
-          RELEASE_TAG=$(find release_files/ -name "*.zip" | xargs -I {} basename {} .zip | awk 'NR == 1 || length($0) < length(min) { min = $0 } END { print min }')
-
-          # Fallback check if no ZIP is found
-          if [[ -z "$RELEASE_TAG" ]]; then
-            RELEASE_TAG="Quartix-5.10.999"
-          fi
-
-          KERNEL_NAME=$(echo "$RELEASE_TAG" | sed -E 's/-[0-9]+\.[0-9]+\.[0-9]+.*//')  # Cut before first kernel version
-          RELEASE_TAG+=" ${BUILD_DATE}"
-          echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
-          echo "KERNEL_NAME=$KERNEL_NAME" >> $GITHUB_ENV
-
-      - name: Debug Variables
-        run: |
-          echo "Selected RELEASE_TAG: $RELEASE_TAG"
-          echo "Kernel Name: $KERNEL_NAME"
-          echo "Target Release Repo: $RELEASE_REPO"
+          while IFS='=' read -r key value; do
+            echo "$key=$value" # for debugging
+            echo "$key=$value" >> $GITHUB_ENV
+          done < release_files/info.txt
+          rm -f release_files/info.txt
 
       - name: Upload All Builds to GKI Release Repo
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
-          repository: "${{ env.RELEASE_REPO }}"
-          tag_name: "${{ env.RELEASE_TAG }}"
+          repository: "${{ env.REL_REPO }}"
+          name: "${{ env.RELEASE_NAME }}"
+          tag_name: "${{ github.run_id }}"
           files: release_files/**/*
-          body: "${{ env.KERNEL_NAME }} release with Non-KSU, KSUxSuSFS, and KSU-Next builds..."
+          body: |
+            -> Linux ${{ env.KVER }}
+            -> KSU Next ${{ env.KSU_NEXT_VER }}
+            -> KSU Official ${{ env.KSU_OFC_VER }}
+            -> SUSFS ඞ ${{ env.SUSFS_VER }}
+            -> KSU Next Manual Hooks
+            
+            [GKI Builder](${{ env.BUILDER_REPO }}):
+            -> Last Commit: [here](${{ env.BUILDER_LAST_COMMIT }})
+            -> Branch: ${{ env.BUILDER_BRANCH }}
+            
+            [Kernel Source](${{ env.KERNEL_REPO }}): 
+            -> Last Commit: [here](${{ env.KERNEL_LAST_COMMIT }})     
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}

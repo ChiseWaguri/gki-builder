@@ -17,6 +17,8 @@ on:
         type: string
       KSU_MANUAL_HOOK:
         type: string
+      LAST_BUILD:
+        type: string
 
   workflow_dispatch:
     inputs:
@@ -73,12 +75,13 @@ jobs:
     steps:
       - name: Set STATUS Based on Trigger Type
         run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          if [ -n "${{ toJson(github.event.inputs) }}" ]; then
             echo "STATUS=BETA" >> $GITHUB_ENV
           else
             echo "STATUS=STABLE" >> $GITHUB_ENV
           fi
-
+          
+          echo "STATUS: $STATUS"
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -96,7 +99,7 @@ jobs:
           swap-size-gb: 10
 
       - name: Restore Toolchain Cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: tc
           key: tc-
@@ -111,7 +114,7 @@ jobs:
           ccache --version
       
       - name: Restore ccache from cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: ~/.ccache
           key: ccache-${{ github.run_number }}
@@ -126,6 +129,8 @@ jobs:
           BUILD_LKMS: ${{ inputs.BUILD_LKMS }}
           BUILD_BOOTIMG: ${{ inputs.BUILD_BOOTIMG }}
           USE_KSU_MANUAL_HOOK: ${{ inputs.KSU_MANUAL_HOOK }}
+          LAST_BUILD: ${{ inputs.LAST_BUILD }}
+          NIGHTLY_LINK: "https://nightly.link/${{ github.repository_owner }}/${{ github.event.repository.name }}/actions/runs/${{ github.run_id }}"
         run: |
           chmod a+x *.sh
 
@@ -150,9 +155,6 @@ jobs:
               ;;
           esac
 
-          export BUILD_BOOTIMG="$BUILD_BOOTIMG"
-          export NIGHTLY_LINK="https://nightly.link/${{ github.repository_owner }}/${{ github.event.repository.name }}/actions/runs/${{ github.run_id }}"
-
           export PATH="/usr/lib/ccache:$PATH"
           ./build.sh
 
@@ -164,13 +166,21 @@ jobs:
           path: |
             artifacts/*.zip
             artifacts/*.img
+            artifacts/*.txt
 
       - name: Save Toolchain Cache
         if: always() && !cancelled()
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         with:
           path: tc
           key: tc-${{ hashFiles('tc/bin/clang') }}
+
+      - name: Save ccache to cache
+        if: always() && !cancelled()
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.ccache
+          key: ccache-${{ github.run_number }}
 
       - name: Delete Old Kernel & Toolchain Cache (Keep 2 Newest Each)
         run: |
