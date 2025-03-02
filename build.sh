@@ -382,9 +382,9 @@ if [[ $BUILD_BOOTIMG == "true" ]]; then
     # Clone tools
     AOSP_MIRROR=https://android.googlesource.com
     BRANCH=main-kernel-build-2024
-    log "Cloning build tools..."
+    log "Cloning build tools into $(pwd)/build-tools"
     git clone -q --depth=1 $AOSP_MIRROR/kernel/prebuilts/build-tools -b $BRANCH build-tools
-    log "cloning mkbootimg"
+    log "Cloning mkbootimg into $(pwd)/mkbootimg..."
     git clone -q --depth=1 $AOSP_MIRROR/platform/system/tools/mkbootimg -b $BRANCH mkbootimg
 
     # Variables
