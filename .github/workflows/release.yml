@@ -71,22 +71,23 @@ jobs:
       - name: Upload All Builds to GKI Release Repo
         uses: softprops/action-gh-release@v2
         with:
-          repository: "${{ env.REL_REPO }}"
-          name: "${{ env.RELEASE_NAME }}"
-          tag_name: "${{ github.run_id }}"
+          repository: ${{ env.REL_REPO }}
+          name: ${{ env.RELEASE_NAME }}
+          tag_name: v${{ env.KVER }}-${{ github.run_id }}
           files: release_files/**/*
           body: |
-            -> Linux ${{ env.KVER }}
-            -> KSU Next ${{ env.KSU_NEXT_VER }}
-            -> KSU Official ${{ env.KSU_OFC_VER }}
-            -> SUSFS ඞ ${{ env.SUSFS_VER }}
-            -> KSU Next Manual Hooks
-            
-            [GKI Builder](${{ env.BUILDER_REPO }}):
-            -> Last Commit: [here](${{ env.BUILDER_LAST_COMMIT }})
-            -> Branch: ${{ env.BUILDER_BRANCH }}
-            
-            [Kernel Source](${{ env.KERNEL_REPO }}): 
-            -> Last Commit: [here](${{ env.KERNEL_LAST_COMMIT }})     
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+            ### 📢 GKI Kernel Release
+            - Linux Version `${{ env.KVER }}`
+            - KSU Next `${{ env.KSU_NEXT_VER }}`
+            - KSU OG `${{ env.KSU_OFC_VER }}`
+            - SUSFS ඞ `${{ env.SUSFS_VER }}`
+          
+            #### Build Details:
+            [GKI Builder](${{ env.BUILDER_REPO }})
+            - Last Commit: [here](${{ env.BUILDER_LAST_COMMIT }})
+            - Branch: `${{ env.BUILDER_CUR_BRANCH }}`
+          
+            [Kernel Source](${{ env.KERNEL_REPO }})
+            - Last Commit: [here](${{ env.KERNEL_LAST_COMMIT }})
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}

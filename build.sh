@@ -143,7 +143,7 @@ ZIP_NAME=$(echo "$ZIP_NAME" | sed "s/KVER/$KERNEL_VERSION/g")
 
 # Handle VARIANT replacement in ZIP_NAME
 if [[ $VARIANT == "none" ]]; then
-    ZIP_NAME=${ZIP_NAME//VARIANT-/} # Remove "VARIANT-" if no variant
+    ZIP_NAME=${ZIP_NAME//-VARIANT/} # Remove "VARIANT-" if no variant
 else
     ZIP_NAME=${ZIP_NAME//VARIANT/$VARIANT} # Replace VARIANT placeholder
 fi
@@ -541,14 +541,16 @@ if [[ $LAST_BUILD == "true" ]]; then
         echo "SUSFS_VER=$(curl -s https://gitlab.com/simonpunk/susfs4ksu/-/raw/gki-${GKI_VERSION}/kernel_patches/include/linux/susfs.h | grep -E '^#define SUSFS_VERSION' | cut -d' ' -f3 | sed 's/"//g')"
         echo "KSU_OFC_VER=$(gh api repos/tiann/KernelSU/tags --jq '.[0].name')"
         echo "KSU_NEXT_VER=$(gh api repos/rifsxd/KernelSU-Next/tags --jq '.[0].name')"
-        echo "BUILD_DATE=$BUILD_DATE"
+        #echo "BUILD_DATE=$BUILD_DATE"
         echo "RELEASE_NAME=$KERNEL_NAME-$BUILD_DATE"
         echo "REL_REPO=$(echo "$GKI_RELEASES_REPO" | sed 's|https://github.com/||')"
         cd $workdir
-        echo "LAST_COMMIT_BUILDER=$(git remote get-url origin)/commit/$(git log -1 --format="%H")"
+        echo "BUILDER_REPO=$(git remote get-url origin)"
+        echo "BUILDER_LAST_COMMIT=$(git remote get-url origin)/commit/$(git log -1 --format="%H")"
         echo "BUILDER_CUR_BRANCH=$(git branch --show-current)"
         cd $workdir/common
-        echo "LAST_COMMIT_KERNEL=$(git remote get-url origin)/commit/$(git log -1 --format="%H")"
+        echo "KERNEL_REPO=$(git remote get-url origin)"
+        echo "KERNEL_LAST_COMMIT=$(git remote get-url origin)/commit/$(git log -1 --format="%H")"
         cd $workdir
     ) >>$workdir/artifacts/info.txt
 fi
