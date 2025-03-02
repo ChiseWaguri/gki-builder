@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Kernel name
-KERNEL_NAME="los22.1+"
+KERNEL_NAME="LOS-22.1-Chise+"
 
 # GKI Version
 GKI_VERSION="android12-5.10"
