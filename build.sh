@@ -73,7 +73,11 @@ cd $workdir
 
 # Determine Clang source
 if [[ $USE_AOSP_CLANG == "true" ]]; then
-    CLANG_URL="https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-${AOSP_CLANG_VERSION}.tar.gz"
+    if [[ "$AOSP_CLANG_SOURCE" =~ ^https?:// ]]; then
+        CLANG_URL="$AOSP_CLANG_SOURCE"
+    else
+        CLANG_URL="https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-${AOSP_CLANG_SOURCE}.tar.gz"
+    fi
 elif [[ $USE_CUSTOM_CLANG == "true" ]]; then
     CLANG_URL="$CUSTOM_CLANG_SOURCE"
 else

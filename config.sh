@@ -35,7 +35,7 @@ GKI_RELEASES_REPO="https://github.com/hazepynut/quartix-releases"
 
 # AOSP Clang
 USE_AOSP_CLANG="true"
-AOSP_CLANG_VERSION="r547379"
+AOSP_CLANG_SOURCE="r547379" # Should be version number or direct link to clang tarball
 
 # Custom clang
 USE_CUSTOM_CLANG="false"
