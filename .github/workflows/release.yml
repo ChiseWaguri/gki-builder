@@ -81,7 +81,7 @@ jobs:
             [Kernel Source](${{ env.KERNEL_REPO }})
             - Last Commit: [here](${{ env.KERNEL_LAST_COMMIT }})
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
       - name: Send notification to TG
         run: |
