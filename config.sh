@@ -17,8 +17,8 @@ ANYKERNEL_REPO="https://github.com/hazepynut/anykernel"
 ANYKERNEL_BRANCH="gki"
 
 # Kernel
-KERNEL_REPO="https://github.com/hazepynut/kernel_new"
-KERNEL_BRANCH="android12-5.10"
+KERNEL_REPO="https://github.com/chisewaguri/android_kernel_xiaomi_sm8450"
+KERNEL_BRANCH="lineage-22.1"
 KERNEL_DEFCONFIG="gki_defconfig"
 DEFCONFIG_FILE="$workdir/common/arch/arm64/configs/$KERNEL_DEFCONFIG"
 
@@ -27,8 +27,10 @@ DEFCONFIGS_EXAMPLE="
 vendor/xiaomi.config
 vendor/gold.config
 "
-DEFCONFIGS="
-" # Leave this empty if you don't need to merge any configs
+DEFCONFIGS="vendor/waipio_GKI.config
+vendor/xiaomi_GKI.config
+vendor/debugfs.config
+vendor/marble_GKI.config" # Leave this empty if you don't need to merge any configs
 
 # Releases repository
 GKI_RELEASES_REPO="https://github.com/hazepynut/quartix-releases"
