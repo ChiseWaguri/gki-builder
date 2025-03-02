@@ -1,85 +1,6 @@
 #!/usr/bin/env bash
-
-# ------------------
-# Functions
-# ------------------
-
-# Telegram functions
-upload_file() {
-    local file="$1"
-
-    if ! [[ -f $file ]]; then
-        error "file $file doesn't exist"
-    fi
-
-    chmod 777 $file
-
-    curl -s -F document=@"$file" "https://api.telegram.org/bot$TOKEN/sendDocument" \
-        -F chat_id="$CHAT_ID" \
-        -F "disable_web_page_preview=true" \
-        -F "parse_mode=markdown" \
-        -o /dev/null
-}
-
-send_msg() {
-    local msg="$1"
-    curl -s -X POST "https://api.telegram.org/bot$TOKEN/sendMessage" \
-        -d chat_id="$CHAT_ID" \
-        -d "disable_web_page_preview=true" \
-        -d "parse_mode=markdown" \
-        -d text="$msg" \
-        -o /dev/null
-}
-
-# KernelSU installation function
-install_ksu() {
-    local repo="$1"
-    local ref="$2" # Can be a branch or a tag
-
-    [[ -z $repo ]] && {
-        echo "Usage: install_ksu <repo-username/ksu-repo-name> [branch-or-tag]"
-        return 1
-    }
-
-    # Fetch the latest tag (always needed for KSU_VERSION)
-    local latest_tag=$(gh api repos/$repo/tags --jq '.[0].name')
-
-    # Determine whether the reference is a branch or tag
-    local ref_type="tags" # Default to tag
-    if [[ -n $ref ]]; then
-        # Check if the provided ref is a branch
-        if gh api repos/$repo/branches --jq '.[].name' | grep -q "^$ref$"; then
-            ref_type="heads"
-        fi
-    else
-        ref="$latest_tag" # Default to latest tag
-    fi
-
-    # Construct the correct raw GitHub URL
-    local url="https://raw.githubusercontent.com/$repo/refs/$ref_type/$ref/kernel/setup.sh"
-
-    log "Installing KernelSU from $repo ($ref)..."
-    curl -LSs "$url" | bash -s "$ref"
-
-    # Always set KSU_VERSION to the latest tag
-    KSU_VERSION="$latest_tag"
-}
-
-# Kernel scripts function
-config() {
-    $workdir/common/scripts/config "$@"
-}
-
-# Logging function
-log() {
-    echo -e "\033[32m[LOG]\033[0m $*" | tee -a "$workdir/build.log"
-}
-
-error() {
-    echo -e "\033[31m[ERROR]\033[0m $*" | tee -a "$workdir/build.log"
-    upload_file "$workdir/build.log"
-    exit 1
-}
+workdir=$(pwd)
+exec > >($workdir/build.log) 2>&1
 
 # Check for required variables
 set -e
@@ -96,11 +17,10 @@ done
 # 	MAIN
 # ---------------
 
-# Setup workdir variable
-workdir=$(pwd)
-
 # Import configuration
-source ./config.sh
+source $workdir/config.sh
+# Import functions
+source $workdir/functions.sh
 
 # Set up timezone
 sudo timedatectl set-timezone $TZ
@@ -143,7 +63,7 @@ ZIP_NAME=$(echo "$ZIP_NAME" | sed "s/KVER/$KERNEL_VERSION/g")
 
 # Handle VARIANT replacement in ZIP_NAME
 if [[ $VARIANT == "none" ]]; then
-    ZIP_NAME=${ZIP_NAME//-VARIANT/} # Remove "VARIANT-" if no variant
+    ZIP_NAME=${ZIP_NAME//-VARIANT/} # Remove "-VARIANT" if no variant
 else
     ZIP_NAME=${ZIP_NAME//VARIANT/$VARIANT} # Replace VARIANT placeholder
 fi
@@ -357,7 +277,7 @@ send_msg "$text"
 
 # Define make args
 MAKE_ARGS="
--j27
+-j$(nproc --all)
 ARCH=arm64
 LLVM=1
 LLVM_IAS=1
@@ -413,7 +333,7 @@ build_kernel() {
 }
 
 set -o pipefail # Ensure errors in pipelines cause failure
-build_kernel | tee -a "$workdir/build.log"
+build_kernel
 exit_code=${PIPESTATUS[0]} # Capture the exit code of build_kernel
 
 if [[ $exit_code -ne 0 ]]; then
@@ -541,7 +461,6 @@ if [[ $LAST_BUILD == "true" ]]; then
         echo "SUSFS_VER=$(curl -s https://gitlab.com/simonpunk/susfs4ksu/-/raw/gki-${GKI_VERSION}/kernel_patches/include/linux/susfs.h | grep -E '^#define SUSFS_VERSION' | cut -d' ' -f3 | sed 's/"//g')"
         echo "KSU_OFC_VER=$(gh api repos/tiann/KernelSU/tags --jq '.[0].name')"
         echo "KSU_NEXT_VER=$(gh api repos/rifsxd/KernelSU-Next/tags --jq '.[0].name')"
-        #echo "BUILD_DATE=$BUILD_DATE"
         echo "RELEASE_NAME=$KERNEL_NAME-$BUILD_DATE"
         echo "REL_REPO=$(echo "$GKI_RELEASES_REPO" | sed 's|https://github.com/||')"
         cd $workdir

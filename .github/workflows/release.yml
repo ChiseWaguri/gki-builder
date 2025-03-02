@@ -4,53 +4,34 @@ on:
   workflow_dispatch:
 
 jobs:
-  non-ksu:
-    name: Build Non-KSU
+  build:
+    strategy:
+      matrix:
+        variant:
+          - { name: "Non-KSU", KernelSU: "None", SUSFS4KSU: "false", KSU_MANUAL_HOOK: "false", LAST_BUILD: "false" }
+          - { name: "KSUxSuSFS", KernelSU: "Official", SUSFS4KSU: "true", KSU_MANUAL_HOOK: "false", LAST_BUILD: "false" }
+          - { name: "KSU-Next with SuSFS", KernelSU: "Next", SUSFS4KSU: "true", KSU_MANUAL_HOOK: "true", LAST_BUILD: "true" }
+    name: Build ${{ matrix.variant.name }}
     uses: ./.github/workflows/build.yml
     secrets: inherit
     with:
-      KernelSU: None
-      SUSFS4KSU: "false"
+      KernelSU: ${{ matrix.variant.KernelSU }}
+      SUSFS4KSU: ${{ matrix.variant.SUSFS4KSU }}
       Clang: Default
       BUILD_BOOTIMG: "true"
-      UPLOAD2GH: "true"
       BUILD_LKMS: "false"
-      KSU_MANUAL_HOOK: "false"
-
-  ksuxsusfs:
-    name: Build KSUxSuSFS
-    uses: ./.github/workflows/build.yml
-    secrets: inherit
-    with:
-      KernelSU: Official
-      SUSFS4KSU: "true"
-      Clang: Default
-      BUILD_BOOTIMG: "true"
-      UPLOAD2GH: "true"
-      BUILD_LKMS: "false"
-      KSU_MANUAL_HOOK: "false"
-
-  ksunxsusfs:
-    name: Build KSU-Next with SuSFS
-    uses: ./.github/workflows/build.yml
-    secrets: inherit
-    with:
-      KernelSU: Next
-      SUSFS4KSU: "true"
-      Clang: Default
-      BUILD_BOOTIMG: "true"
-      UPLOAD2GH: "true"
-      BUILD_LKMS: "false"
-      KSU_MANUAL_HOOK: "true"
-      LAST_BUILD: "true"
+      KSU_MANUAL_HOOK: ${{ matrix.variant.KSU_MANUAL_HOOK }}
+      LAST_BUILD: ${{ matrix.variant.LAST_BUILD }}
 
   release:
     name: Create Unified Release
-    needs: [non-ksu, ksuxsusfs, ksunxsusfs]  # Waits for all build to be complete
+    needs: build  # Waits for all build jobs to be complete
     runs-on: ubuntu-latest
     steps:
       - name: Checkout current repo
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Download All Artifacts
         uses: actions/download-artifact@v4
@@ -62,18 +43,27 @@ jobs:
 
       - name: Extract variables from info.txt
         run: |
-          while IFS='=' read -r key value; do
-            echo "$key=$value" # for debugging
-            echo "$key=$value" >> $GITHUB_ENV
-          done < release_files/info-${{ github.run_number }}/info.txt
-          rm -f release_files/info-${{ github.run_number }}/info.txt
+          set -e  # Exit on error
+          info_file="release_files/info-${{ github.run_number }}/info.txt"
+          if [[ -f "$info_file" ]]; then
+            while IFS='=' read -r key value; do
+              key=$(echo -n "$key" | tr -d ' ')
+              value=$(echo -n "$value" | tr -d ' ')
+              echo "$key=$value" # for debugging
+              echo "$key=$value" >> $GITHUB_ENV
+            done < "$info_file"
+            rm -f "$info_file"
+          else
+            echo "error: info.txt not found!"
+            exit 1
+          fi
 
       - name: Upload All Builds to GKI Release Repo
         uses: softprops/action-gh-release@v2
         with:
           repository: ${{ env.REL_REPO }}
           name: ${{ env.RELEASE_NAME }}
-          tag_name: v${{ env.KVER }}-${{ github.run_id }}
+          tag_name: v${{ github.run_id }}
           prerelease: true
           files: release_files/**/*
           body: |
@@ -92,3 +82,11 @@ jobs:
             - Last Commit: [here](${{ env.KERNEL_LAST_COMMIT }})
       env:
         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: Send notification to TG
+        run: |
+          source ./functions.sh
+          send_msg "https://github.com/${{ env.REL_REPO }}/releases/tag/${{ github.run_id }}"
+      env:
+        TOKEN: ${{ secrets.TOKEN }}
+        CHAT_ID: ${{ secrets.CHAT_ID }}
