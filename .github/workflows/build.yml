@@ -75,13 +75,15 @@ jobs:
     steps:
       - name: Set STATUS Based on Trigger Type
         run: |
-          if [ -n "${{ toJson(github.event.inputs) }}" ]; then
+          if [[ ${{ toJson(github.event.inputs) }} == "null" ]]; then
             echo "STATUS=BETA" >> $GITHUB_ENV
           else
             echo "STATUS=STABLE" >> $GITHUB_ENV
           fi
-          
-          echo "STATUS: $STATUS"
+
+      - name: Display STATUS
+        run: |
+            echo "STATUS: $STATUS"
 
       - name: Checkout
         uses: actions/checkout@v4
