@@ -58,19 +58,33 @@ jobs:
             exit 1
           fi
 
+      # Get the Latest Tag from GitHub
+      - name: Generate and create new tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+            # Fetch latest tag from release repo
+            TAG="$(gh api repos/$REL_REPO/tags --jq '.[0].name')"
+            [ -z "$TAG" ] && TAG="$KERNEL_NAME-r0"
+
+            RELEASE_TAG="$(echo "$TAG" | awk -F'-r' '{suffix=$2; if (!suffix) suffix=0; suffix++; printf "%s-r%d", $1, suffix}')"
+    
+            echo "Release tag: $RELEASE_TAG"
+            echo "NEW_TAG=${NEW_TAG}" >> $GITHUB_ENV
+
       - name: Upload All Builds to GKI Release Repo
         uses: softprops/action-gh-release@v2
         with:
           repository: ${{ env.REL_REPO }}
           name: ${{ env.RELEASE_NAME }}
-          tag_name: ${{ github.run_id }}
+          tag_name: ${{ env.RELEASE_TAG}}
           prerelease: true
           files: release_files/**/*
           body: |
             ### 📢 GKI Kernel Release
             - Linux Version `${{ env.KVER }}`
             - KSU Next `${{ env.KSU_NEXT_VER }}`
-            - KSU OG `${{ env.KSU_OFC_VER }}`
+            - Official KernelSU `${{ env.KSU_OFC_VER }}`
             - SUSFS ඞ `${{ env.SUSFS_VER }}`
 
             #### Build Details
@@ -86,7 +100,7 @@ jobs:
       - name: Send notification to TG
         run: |
           source ./functions.sh
-          send_msg "https://github.com/${{ env.REL_REPO }}/releases/tag/${{ github.run_id }}"
+          send_msg "📦 Release complete! [GitHub](https://github.com/${{ env.REL_REPO }}/releases/tag/${{ github.run_id }})"
         env:
           TOKEN: ${{ secrets.TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}

@@ -466,6 +466,7 @@ if [[ $LAST_BUILD == "true" ]]; then
         echo "KSU_OFC_VER=$(gh api repos/tiann/KernelSU/tags --jq '.[0].name')"
         echo "KSU_NEXT_VER=$(gh api repos/rifsxd/KernelSU-Next/tags --jq '.[0].name')"
         echo "RELEASE_NAME=$KERNEL_NAME-$BUILD_DATE"
+        echo "KERNEL_NAME=$KERNEL_NAME"
         echo "REL_REPO=$(echo "$GKI_RELEASES_REPO" | sed 's|https://github.com/||')"
         cd $workdir
         echo "BUILDER_REPO=$(git remote get-url origin)"
