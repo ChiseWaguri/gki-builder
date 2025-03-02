@@ -80,13 +80,13 @@ jobs:
 
             [Kernel Source](${{ env.KERNEL_REPO }})
             - Last Commit: [here](${{ env.KERNEL_LAST_COMMIT }})
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
       - name: Send notification to TG
         run: |
           source ./functions.sh
           send_msg "https://github.com/${{ env.REL_REPO }}/releases/tag/${{ github.run_id }}"
-      env:
-        TOKEN: ${{ secrets.TOKEN }}
-        CHAT_ID: ${{ secrets.CHAT_ID }}
+        env:
+          TOKEN: ${{ secrets.TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
