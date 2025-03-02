@@ -474,7 +474,6 @@ if [[ $LAST_BUILD == "true" ]]; then
         cd $workdir/common
         echo "KERNEL_REPO=$(git remote get-url origin)"
         echo "KERNEL_LAST_COMMIT=$(git remote get-url origin)/commit/$(git log -1 --format="%H")"
-        cd $workdir
     ) >>$workdir/artifacts/info.txt
 fi
 
