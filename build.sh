@@ -23,7 +23,7 @@ source $workdir/config.sh
 source $workdir/functions.sh
 
 # Set up timezone
-sudo timedatectl set-timezone $TZ
+# sudo timedatectl set-timezone $TZ
 
 # Clone needed repositories
 cd $workdir
