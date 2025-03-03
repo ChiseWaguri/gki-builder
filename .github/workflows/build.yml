@@ -69,16 +69,16 @@ jobs:
     steps:
       - name: Set STATUS based on trigger type
         run: |
-          case "${{ toJson(github.event.inputs) }}" in
-            null)
-              echo "STATUS=RELEASE" >> $GITHUB_ENV
-              echo "TRIGGER=workflow_call" >> $GITHUB_ENV
-              ;;
-            *)
-              echo "STATUS=BETA" >> $GITHUB_ENV
-              echo "TRIGGER=workflow_dispatch" >> $GITHUB_ENV
-              ;;
-          esac
+          INPUTS_JSON='${{ toJson(github.event.inputs) }}'
+      
+          if [[ -n "$INPUTS_JSON" && "$INPUTS_JSON" != "{}" ]]; then
+            echo "STATUS=BETA" >> $GITHUB_ENV
+            echo "TRIGGER=workflow_dispatch" >> $GITHUB_ENV
+          else
+            echo "STATUS=RELEASE" >> $GITHUB_ENV
+            echo "TRIGGER=workflow_call" >> $GITHUB_ENV
+          fi
+
 
       - name: Verify STATUS
         run: echo "Triggered by $TRIGGER, STATUS is set to $STATUS"
