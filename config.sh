@@ -18,7 +18,7 @@ ANYKERNEL_BRANCH="gki"
 
 # Kernel
 KERNEL_REPO="https://github.com/chisewaguri/android_kernel_xiaomi_marble"
-KERNEL_BRANCH="selinux-spoof"
+KERNEL_BRANCH="spoof-selinux"
 KERNEL_DEFCONFIG="marble_defconfig"
 DEFCONFIG_FILE="$workdir/common/arch/arm64/configs/$KERNEL_DEFCONFIG"
 
