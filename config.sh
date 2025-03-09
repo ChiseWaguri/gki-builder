@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Kernel name
-KERNEL_NAME="Melt-Chise-v3.6.3+++"
+KERNEL_NAME="Melt-Chise-v3.6.3-fix++"
 
 # GKI Version
 GKI_VERSION="android12-5.10"
@@ -17,8 +17,8 @@ ANYKERNEL_REPO="https://github.com/hazepynut/anykernel"
 ANYKERNEL_BRANCH="gki"
 
 # Kernel
-KERNEL_REPO="https://github.com/chisewaguri/android_kernel_xiaomi_marble"
-KERNEL_BRANCH="spoof-selinux"
+KERNEL_REPO="https://github.com/Pzqqt/android_kernel_xiaomi_marble"
+KERNEL_BRANCH="melt-rebase-4LazyGoogle"
 KERNEL_DEFCONFIG="marble_defconfig"
 DEFCONFIG_FILE="$workdir/common/arch/arm64/configs/$KERNEL_DEFCONFIG"
 
