@@ -166,11 +166,35 @@ if [[ $KSU != "None" ]]; then
     done
 fi
 
+
+
+# Install KernelSU driver
+cd $workdir
+if [[ $KSU != "None" ]]; then
+    log "Installing KernelSU..."
+
+    case "$KSU" in
+    "Official") install_ksu tiann/KernelSU ;;
+    "Rissu") install_ksu rsuntk/KernelSU $([[ $USE_KSU_SUSFS == true ]] && echo susfs-v1.5.5 || echo main) ;;
+    "Next") install_ksu rifsxd/KernelSU-Next $([[ $USE_KSU_SUSFS == true ]] && echo next-susfs || echo next) ;;
+    "xx's") install_ksu backslashxx/KernelSU $([[ $USE_KSU_SUSFS == true ]] && echo 12070+sus155 || echo magic) ;;
+    *) error "Invalid KSU value: $KSU" ;;
+    esac
+fi
+
 # Apply config for KernelSU manual hook (Requires supported KernelSU)
 if [[ $USE_KSU_MANUAL_HOOK == "true" ]]; then
     config --file $DEFCONFIG_FILE --enable CONFIG_KSU_MANUAL_HOOK
     config --file $DEFCONFIG_FILE --disable CONFIG_KSU_WITH_KPROBE
     config --file $DEFCONFIG_FILE --disable CONFIG_KSU_SUSFS_SUS_SU
+    echo "config KSU_MANUAL_HOOK
+ 	bool "Manual hooking without kprobes"
+ 	depends on KSU && KSU != m
+ 	depends on KPROBES
+ 	default n
+ 	help
+ 	  Keep KPROBES enabled but do not use KPROBES to implement
+ 	  the hooks required by KernelSU, but instead hook them manually." >> $workdir/common/drivers/kernelsu/Kconfig
 
     if [[ $KSU == "Official" ]]; then
         error "Official KernelSU has dropped manual hook support. Exiting..."
@@ -193,20 +217,6 @@ if [[ $USE_KSU_MANUAL_HOOK == "true" ]]; then
 
         fi
     fi
-fi
-
-# Install KernelSU driver
-cd $workdir
-if [[ $KSU != "None" ]]; then
-    log "Installing KernelSU..."
-
-    case "$KSU" in
-    "Official") install_ksu tiann/KernelSU ;;
-    "Rissu") install_ksu rsuntk/KernelSU $([[ $USE_KSU_SUSFS == true ]] && echo susfs-v1.5.5 || echo main) ;;
-    "Next") install_ksu rifsxd/KernelSU-Next $([[ $USE_KSU_SUSFS == true ]] && echo next-susfs || echo next) ;;
-    "xx's") install_ksu backslashxx/KernelSU $([[ $USE_KSU_SUSFS == true ]] && echo 12070+sus155 || echo magic) ;;
-    *) error "Invalid KSU value: $KSU" ;;
-    esac
 fi
 
 # SUSFS for KSU setup
