@@ -222,7 +222,11 @@ if [[ $USE_KSU_SUSFS == "true" && -z $KSU ]]; then
     error "You can't use SuSFS without KernelSU!"
 elif [[ -n $KSU && $USE_KSU_SUSFS == "true" ]]; then
     log "Cloning susfs4ksu..."
-    git clone -q --depth=1 https://gitlab.com/simonpunk/susfs4ksu -b gki-$GKI_VERSION $workdir/susfs4ksu
+    git clone -q --depth=10 https://gitlab.com/simonpunk/susfs4ksu -b gki-$GKI_VERSION $workdir/susfs4ksu && (
+        cd $workdir/susfs4ksu
+        git checkout 171bac640ba1e9f3dbf744ea65adec6e90adbaf9
+    )
+    
     SUSFS_PATCHES="$workdir/susfs4ksu/kernel_patches"
 
     # Copy susfs files (Kernel Side)
